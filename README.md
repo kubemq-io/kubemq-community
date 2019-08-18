@@ -75,3 +75,49 @@ KubeMQ supports CQRS based RPC flows with the following core features:
 - **Backend Support** - [Prometheus](https://prometheus.io/), [Honeycomb](https://www.honeycomb.io/), [AWS X-Ray](https://console.aws.amazon.com/xray/home),[Datadog](https://www.datadoghq.com/),[Jeager](https://www.jaegertracing.io/),[StackDriver](https://console.cloud.google.com/monitoring),[Zipkin](https://zipkin.io/)
 
 
+# Installation
+
+Every installation method requires a KubeMQ token.
+Please [register](https://account.kubemq.io/login/register?destination=docker) to obtain your KubeMQ token.
+
+## Docker
+
+Pull and run KubeMQ Docker container:
+``` bash
+docker run -d -p 8080:8080 -p 50000:50000 -p 9090:9090 \
+-v $PWD:/store -e KUBEMQ_TOKEN=<YOUR_KUBEMQ_TOKEN> kubemq/kubemq
+
+```
+
+## Kubernetes
+
+Run :
+
+``` bash
+kubectl apply -f https://get.kubemq.io/deploy?token=<YOUR_KUBEMQ_TOKEN>
+```
+
+
+Please refer to our [docs](https://docs.kubemq.io/installation/kubernetes.html) for more options.
+
+# Get Started
+
+No matter what kind of App or Service you want to build, our three-step checklists will get you set up and ready.
+
+Pick one of the desired message patterns:
+
+- [Get Started with Queue Message Pattern](https://docs.kubemq.io/get_started/queue.html)
+- [Get Started with Pub/Sub Message Pattern](./pubsub.https://docs.kubemq.io/get_started/pubsub.html)
+- [Get Started with RPC Message Pattern](https://docs.kubemq.io/get_started/rpc.html)
+
+# Documatation
+
+Visit our [Extensive KubeMQ Documentation](https://docs.kubemq.io/).
+
+# Support
+
+You can reach us at:
+- [**Email**](mailto:support@kubemq.io)
+- [**Slack**](https://kubemq.slack.com)
+- [**Chat**](htts://kubemq.io)
+- **By open an issue here**
