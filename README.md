@@ -119,5 +119,5 @@ Visit our [Extensive KubeMQ Documentation](https://docs.kubemq.io/).
 You can reach us at:
 - [**Email**](mailto:support@kubemq.io)
 - [**Slack**](https://kubemq.slack.com)
-- [**Chat**](htts://kubemq.io)
+- [**Chat**](https://kubemq.io)
 - **By open an issue here**
