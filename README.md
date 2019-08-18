@@ -120,4 +120,4 @@ You can reach us at:
 - [**Email**](mailto:support@kubemq.io)
 - [**Slack**](https://kubemq.slack.com)
 - [**Chat**](https://kubemq.io)
-- **By open an issue here**
+- [**By open an issue**](https://github.com/kubemq-io/kubemq/issues)
