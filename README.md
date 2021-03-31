@@ -49,11 +49,23 @@ KubeMQ SDKs support list:
 | SDK | Github   |
 |:----|:---|
 | C#    |  https://github.com/kubemq-io/kubemq-CSharp  |
-| Jave    | https://github.com/kubemq-io/kubemq-Java |
+| Java    | https://github.com/kubemq-io/kubemq-Java |
 | Python    |  https://github.com/kubemq-io/kubemq-Python  |
 | Node    |  https://github.com/kubemq-io/kubemq-node |
 | Go    | https://github.com/kubemq-io/kubemq-go |
 | REST    |  https://postman.kubemq.io/ |
+
+## KubeMQ Cookbooks
+
+| SDK | Github   |
+|:----|:---|
+| C#    |  https://github.com/kubemq-io/csharp-sdk-cookbook  |
+| Java    | https://github.com/kubemq-io/java-sdk-cookbook |
+| Python    |  https://github.com/kubemq-io/python-sdk-cookbook |
+| Node    |  https://github.com/kubemq-io/node-sdk-cookbook |
+| Go    | https://github.com/kubemq-io/go-sdk-cookbook|
+
+
 
 ## Documatation
 
