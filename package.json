@@ -1,0 +1,28 @@
+{
+  "name": "kubemq",
+  "version": "2.2.4",
+  "main": "index.js",
+  "description": "kubemq server",
+  "scripts": {
+    "postinstall": "go-npm install",
+    "preuninstall": "go-npm uninstall"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kubemq-io/kubemq.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/kubemq-io/kubemq/issues"
+  },
+  "homepage": "https://kubemq.io",
+  "dependencies": {
+    "kubemq-npm": "^0.1.0"
+  },
+  "goBinary": {
+    "name": "kubemq",
+    "path": "./bin",
+    "url": "https://github.com/kubemq-io/kubemq/releases/download/v{{version}}/kubemq-{{platform}}-{{arch}}.tar.gz"
+  }
+}
