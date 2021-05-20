@@ -30,7 +30,7 @@ kubectl apply -f https://deploy.kubemq.io/key/{{your key}}
 
 Pull and run KubeMQ standalone docker container:
 ``` bash
-docker run -d -p 8080:8080 -p 50000:50000 -p 9090:9090 KEY={{yourkey}} kubemq/kubemq-standalone:latest
+docker run -d -p 8080:8080 -p 50000:50000 -p 9090:9090 -e KEY={{yourkey}} kubemq/kubemq-standalone:latest
 ```
 
 ### Binaries
