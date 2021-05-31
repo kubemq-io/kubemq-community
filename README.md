@@ -30,7 +30,7 @@ kubectl apply -f https://deploy.kubemq.io/key/{{your key}}
 
 Pull and run KubeMQ standalone docker container:
 ``` bash
-docker run -d -p 8080:8080 -p 50000:50000 -p 9090:9090 KEY={{yourkey}} kubemq/kubemq-standalone:latest
+docker run -d -p 8080:8080 -p 50000:50000 -p 9090:9090 -e KEY={{yourkey}} kubemq/kubemq-standalone:latest
 ```
 
 ### Binaries
@@ -42,6 +42,60 @@ Steps:
 1. Download the latest version of KubeMQ standalone from [Releases](https://github.com/kubemq-io/kubemq/releases)
 2. Unpack the downloaded archive
 3. Run ```kubemq -k {{your key}}``` (A key is needed for the first time only)
+
+
+### Windows Service
+
+1. Download the Windows version from KubeMQ Releases. Once downloaded, the binary can be installed from anywhere.
+2. Create config.yaml configuration file and save it to the same location of the Windows binary.
+
+
+#### Service Installation
+
+Run:
+```bash
+kubemq --service install
+```
+
+#### Service Installation With Username and Password
+
+Run:
+```bash
+kubemq --service install --username {your-username} --password {your-password}
+```
+
+#### Service UnInstall
+
+Run:
+```bash
+kubemq --service uninstall
+```
+
+#### Service Start
+
+Run:
+```bash
+kubemq --service start -k {{yourkey}}
+```
+
+
+#### Service Stop
+
+Run:
+```bash
+kubemq --service stop
+```
+
+#### Service Restart
+
+Run:
+```bash
+kubemq --service restart
+```
+
+**NOTE**: When running under Windows service, all logs will be emitted to Windows Events Logs.
+
+
 
 ## KubeMQ SDKs
 KubeMQ SDKs support list:
