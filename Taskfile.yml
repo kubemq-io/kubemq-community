@@ -1,0 +1,29 @@
+# github.com/go-task/task
+
+version: '3'
+
+vars:
+  BINARY_NAME: kubemq
+  VERSION: v2.2.10
+
+tasks:
+  check_update:
+    cmds:
+      - go list -u -m -mod=mod -json all | go-mod-outdated -update -direct
+  lint:
+    cmds:
+      - golangci-lint run --disable gocritic --enable misspell --disable gosec
+  default:
+    cmds:
+      - go build -o "{{.BINARY_NAME}}.exe" -ldflags "-X 'main.version={{.VERSION}}'"
+      - kubemq.exe
+  goreleaser:
+    env:
+      VERSION: v2.2.10
+    cmds:
+      - goreleaser --snapshot --skip-publish --rm-dist
+
+  release:
+    cmds:
+      - git tag -a {{.VERSION}} -m {{.VERSION}}
+      - git push origin master --tags

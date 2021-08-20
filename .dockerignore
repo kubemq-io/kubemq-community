@@ -1,0 +1,8 @@
+.git
+store
+test
+bin
+vendor
+dist
+.idea
+logs

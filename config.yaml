@@ -1,0 +1,97 @@
+api:
+  port: 8080
+authentication:
+  config: ""
+  enable: false
+  jwtConfig:
+    filePath: ""
+    key: |-
+      -----BEGIN PUBLIC KEY-----
+      MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAt2GVE6vIMKlUsJeIQrSX
+      tPG7X+06/qfyfQUjYJYvn1Pff05B3LcazECYEMd/act5YlnzrMg6hlbcoa9szr3/
+      mpwjJ+l4RKd6J1uZngPaGaRSAr4DvSYsMe9pRrrOnW9XyRBLiB+EOriq5qkcSTnR
+      cwwoczPekJOK45rEUgdaL5JP/TRhYYwgayb+zQ5cu+1Hx94m5XldrAzkeQ8ldMeW
+      BPzfasnX6zaBXtdWksJqmpMMWg1NunH3+NWFyLsPt4BNbtjpKOp7Wq3jDQpp803P
+      sK3/XksM/87qPL4xNCJuV8MF4Pbx8JE3ZRusK6usmJrohv8+vgIIg4oKdpMjDlrz
+      pQIDAQAB
+      -----END PUBLIC KEY-----
+    signatureType: RS512
+  type: ""
+authorization:
+  autoReload: 0
+  enable: false
+  filePath: ""
+  policyData: ""
+  url: ""
+broker:
+  diskSyncSeconds: 60
+  maxConn: 0
+  maxPayload: 104857600
+  parallelRecovery: 2
+  readBufferSize: 2
+  sliceMaxAgeSeconds: 0
+  sliceMaxBytes: 64
+  sliceMaxMessages: 0
+  writeBufferSize: 2
+  writeDeadline: 2000
+grpc:
+  bodyLimit: 104857600
+  port: 50000
+  subBuffSize: 100
+key: ""
+license: ""
+licenseFileName: ""
+log:
+  level: info
+queue:
+  defaultVisibilitySeconds: 60
+  defaultWaitTimeoutSeconds: 1
+  maxDelaySeconds: 43200
+  maxExpirationSeconds: 43200
+  maxInflight: 2048
+  maxNumberOfMessages: 1024
+  maxReceiveCount: 1024
+  maxVisibilitySeconds: 43200
+  maxWaitTimeoutSeconds: 3600
+  pubAckWaitSeconds: 60
+rest:
+  bodyLimit: ""
+  cors:
+    allowCredentials: false
+    allowHeaders: []
+    allowMethods:
+    - GET
+    - POST
+    allowOrigins:
+    - '*'
+    exposeHeaders: []
+    maxAge: 0
+  port: 9090
+  readTimeout: 60
+  subBuffSize: 100
+  writeTimeout: 60
+routing:
+  autoReload: 0
+  data: ""
+  enable: false
+  filePath: ""
+  url: ""
+security:
+  ca:
+    data: ""
+    filename: ""
+  cert:
+    data: ""
+    filename: ""
+  key:
+    data: ""
+    filename: ""
+store:
+  cleanStore: false
+  maxMessages: 0
+  maxPurgeInactive: 1440
+  maxQueueSize: 0
+  maxQueues: 0
+  maxRetention: 1440
+  maxSubscribers: 0
+  storePath: ./store
