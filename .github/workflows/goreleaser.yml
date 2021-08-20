@@ -20,3 +20,5 @@ jobs:
         with:
           version: latest
           args: release --rm-dist
+        env:
+          GITHUB_TOKEN: ${{ secrets.GORELASER_TOKEN }}
