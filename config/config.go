@@ -50,6 +50,7 @@ func Host() string {
 
 type Config struct {
 	Host            string                `json:"-"`
+	Client          *ClientConfig         `json:"client"`
 	Api             *ApiConfig            `json:"api"`
 	Log             *LogConfig            `json:"log"`
 	Broker          *BrokerConfig         `json:"broker"`
@@ -102,6 +103,7 @@ func GetDefaultConfig() *Config {
 	)
 	return &Config{
 		Host:            "",
+		Client:          defaultClientConfig(),
 		Api:             defaultApiConfig(),
 		Log:             defaultLogConfig(),
 		Broker:          defaultBrokerConfig(),
@@ -223,6 +225,9 @@ func getConfigRecord(paths ...string) *Config {
 }
 
 func (c *Config) Validate() error {
+	if err := c.Client.Validate(); err != nil {
+		return err
+	}
 	if err := c.Grpc.Validate(); err != nil {
 		return err
 	}
