@@ -29,7 +29,7 @@ func (s *Server) SetVersion(version string) *Server {
 
 func (s *Server) Run() error {
 	s.ctx, s.cancelFunc = context.WithCancel(context.Background())
-	s.appConfig = config.GetAppConfig("./")
+	s.appConfig = config.GetAppConfig("./","./config")
 	err := s.appConfig.Validate()
 	if err != nil {
 		return err

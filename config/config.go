@@ -21,7 +21,6 @@ import (
 var appConfig *Config
 var once sync.Once
 var configFile = pflag.String("config", "./config.yaml", "set config file name")
-var isContainer = pflag.BoolP("container", "c", false, "set running in container")
 
 type ServerState struct {
 	Host                string `json:"host"`
@@ -51,10 +50,6 @@ func Host() string {
 
 type Config struct {
 	Host            string                `json:"-"`
-	Key             string                `json:"key"`
-	License         string                `json:"license"`
-	LicenseFileName string                `json:"licenseFileName"`
-	Mode            *ModeConfig           `json:"-"`
 	Api             *ApiConfig            `json:"api"`
 	Log             *LogConfig            `json:"log"`
 	Broker          *BrokerConfig         `json:"broker"`
@@ -72,18 +67,6 @@ type Config struct {
 
 func initFlags() {
 	pflag.Parse()
-}
-func (c *Config) SetKey(value string) *Config {
-	c.Key = value
-	return c
-}
-func (c *Config) SetLicenseData(value string) *Config {
-	c.License = value
-	return c
-}
-func (c *Config) SetLicenseFileName(value string) *Config {
-	c.LicenseFileName = value
-	return c
 }
 
 func (c *Config) SetVersion(value string) *Config {
@@ -119,10 +102,6 @@ func GetDefaultConfig() *Config {
 	)
 	return &Config{
 		Host:            "",
-		Key:             "",
-		License:         "",
-		LicenseFileName: "",
-		Mode:            defaultModeConfig(),
 		Api:             defaultApiConfig(),
 		Log:             defaultLogConfig(),
 		Broker:          defaultBrokerConfig(),
@@ -237,9 +216,6 @@ func getConfigRecord(paths ...string) *Config {
 	}
 	if appConfig.Host == "" {
 		appConfig.Host = GetHostname()
-	}
-	if isContainer != nil {
-		appConfig.Mode.IsContainer = *isContainer
 	}
 	d, _ := yaml.Marshal(appConfig)
 	_ = ioutil.WriteFile("./config.yaml", d, 0600)
