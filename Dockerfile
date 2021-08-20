@@ -23,5 +23,5 @@ EXPOSE 8080
 #RUN adduser -D kubemq
 WORKDIR kubemq
 USER 1001
-CMD ["./kubemq-run"]
+CMD ["./kubemq-run","server"]
 
