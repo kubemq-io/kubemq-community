@@ -20,7 +20,7 @@ builds:
       - 6
       - 7
     ldflags:
-      - "-X 'main.version={{.Env.VERSION}}'"
+      - "-X 'main.version={{ .Tag }}'"
     ignore:
       - goos: windows
         goarch: 386
