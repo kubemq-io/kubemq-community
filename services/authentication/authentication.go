@@ -3,7 +3,7 @@ package authentication
 import (
 	"context"
 	"fmt"
-	"github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/kubemq-io/kubemq-community/config"
 	"github.com/kubemq-io/kubemq-community/pkg/authentication"
 	"github.com/kubemq-io/kubemq-community/pkg/authentication/local"

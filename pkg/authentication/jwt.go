@@ -2,7 +2,7 @@ package authentication
 
 import (
 	"fmt"
-	"github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt/v4"
 )
 
 var JWTSignMethods = map[string]jwt.SigningMethod{

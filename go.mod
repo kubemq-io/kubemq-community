@@ -5,11 +5,11 @@ go 1.15
 require (
 	github.com/BurntSushi/toml v0.4.1
 	github.com/casbin/casbin/v2 v2.36.1
-	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/fortytw2/leaktest v1.3.0
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-resty/resty/v2 v2.6.0
+	github.com/golang-jwt/jwt/v4 v4.0.0
 	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e // indirect
 	github.com/gorilla/websocket v1.4.2
 	github.com/json-iterator/go v1.1.11
