@@ -22,7 +22,13 @@ tasks:
       VERSION: v2.2.10
     cmds:
       - goreleaser --snapshot --skip-publish --rm-dist
-
+  docker:
+    env:
+      GOOS: linux
+      GOARCH: amd64
+    cmds:
+      - docker build --build-arg VERSION={{.VERSION}} . -t kubemq/{{.BINARY_NAME}}:{{.VERSION}}
+      - docker tag kubemq/{{.BINARY_NAME}}:{{.VERSION}} kubemq/{{.BINARY_NAME}}:latest
   release:
     cmds:
       - git tag -a {{.VERSION}} -m {{.VERSION}}
