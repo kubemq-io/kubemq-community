@@ -1,6 +1,8 @@
-# What is KubeMQ?
-Enterprise-grade message broker native for Docker and Kubernetes. Delivered in a production-ready kubernetes cluster or in a standalone docker container or native binaries, and designed for any type of workload.  
-KubeMQ is provided as a small, lightweight Docker container, designed for any workload and architecture running in Kubernetes or any other container orchestration system which support Docker.
+
+
+# What is KubeMQ Community?
+KubeMQ Community is the community version of KubeMQ, the Kubernetive native message broker.
+[More about KubeMQ](https://kubemq.io/)
 
 # Installation
 
@@ -21,8 +23,24 @@ docker run -d -p 8080:8080 -p 50000:50000 -p 9090:9090 kubemq/kubemq-community:l
 2. Unpack the downloaded archive
 3. Run ```kubemq server```
 
+# KubeMQ Connectors
+
+|Name  | Description | Github |
+|--|--|--|
+| KubeMQ Targets | Connect KubeMQ Message Broker with external systems and cloud services  |[KubeMQ Targets](https://github.com/kubemq-hub/kubemq-targets)|
+| KubeMQ Sources | Connects external systems and cloud services with KubeMQ message queue broker  |[KubeMQ Sources](https://github.com/kubemq-hub/kubemq-sources)|
+| KubeMQ Bridges | bridge, replicate, aggregate, and transform messages between KubeMQ  |[KubeMQ Bridges](https://github.com/kubemq-hub/kubemq-bridges)|
 
 
+# KubeMQ CLI
+KubeMQ community edition comes with built-in CLI tool for interaction with KubeMQ server.
+Check out the docs:
+
+* [kubemq commands](https://github.com/kubemq-io/kubemq-community/blob/master/docs/cli/kubemq_commands.md)  - Execute Kubemq 'commands'
+* [kubemq events](https://github.com/kubemq-io/kubemq-community/blob/master/docs/cli/kubemq_events.md)     - Execute Kubemq 'events' Pub/Sub commands
+* [kubemq events_store](https://github.com/kubemq-io/kubemq-community/blob/master/docs/cli/kubemq_events_store.md)     - Execute Kubemq 'Events-Store' Pub/Sub commands
+* [kubemq queries](https://github.com/kubemq-io/kubemq-community/blob/master/docs/cli/kubemq_queries.md)   - Execute Kubemq 'queries'
+* [kubemq queues](https://github.com/kubemq-io/kubemq-community/blob/master/docs/cli/kubemq_queues.md)     - Execute Kubemq 'queues' commands
 
 # KubeMQ SDKs
 KubeMQ SDKs support list:
