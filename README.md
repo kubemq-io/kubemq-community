@@ -1,7 +1,7 @@
 ![Docker](https://github.com/kubemq-io/kubemq-community/actions/workflows/docker-image.yml/badge.svg) ![goreleaser](https://github.com/kubemq-io/kubemq-community/actions/workflows/goreleaser.yml/badge.svg) ![Go Report Card](https://goreportcard.com/badge/github.com/kubemq-io/kubemq-community)
 # What is KubeMQ Community?
 
-KubeMQ Community is the open sources version of KubeMQ, the Kubernetes native message broker.
+KubeMQ Community is the open-source version of KubeMQ, the Kubernetes native message broker.
 [More about KubeMQ](https://kubemq.io/)
 
 # Installation
