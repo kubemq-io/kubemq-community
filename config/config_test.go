@@ -7,7 +7,7 @@ import (
 )
 
 func Test_getConfigFromEnv(t *testing.T) {
-	*configFile = ""
+	configFile = ""
 	err := os.Setenv("LOG_LEVEL", "debug")
 
 	require.NoError(t, err)

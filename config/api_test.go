@@ -6,17 +6,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func Test_ApiLoadFromFile(t *testing.T) {
-
-	apiConfig := &ApiConfig{
-		Port: 8080,
-	}
-	*configFile = "api"
-	appConfig := getConfigRecord("./conf")
-	require.EqualValues(t, apiConfig, appConfig.Api)
-
-}
-
 func Test_ApiLoadEnvironmentVars(t *testing.T) {
 	apiConfig := &ApiConfig{
 		Port: 8888,
