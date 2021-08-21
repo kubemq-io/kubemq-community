@@ -38,7 +38,6 @@ func QueueBatchSenderLogging(l *logging.Logger) QueueBatchSenderMiddleware {
 	}
 }
 
-
 func ChainQueueBatchSenders(qbs QueueBatchSender, qbsm ...QueueBatchSenderMiddleware) QueueBatchSender {
 	sender := qbs
 	for _, middleware := range qbsm {

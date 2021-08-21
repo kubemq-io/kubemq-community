@@ -19,9 +19,8 @@ func Get(ctx context.Context, url string, target interface{}) error {
 		return err
 	}
 	defer func() {
-	_ =resp.Body.Close()
+		_ = resp.Body.Close()
 	}()
-
 
 	return json.NewDecoder(resp.Body).Decode(target)
 }
@@ -36,7 +35,7 @@ func GetString(ctx context.Context, url string) (string, error) {
 		return "", err
 	}
 	defer func() {
-		_ =resp.Body.Close()
+		_ = resp.Body.Close()
 	}()
 	buf := new(bytes.Buffer)
 	_, err = buf.ReadFrom(resp.Body)

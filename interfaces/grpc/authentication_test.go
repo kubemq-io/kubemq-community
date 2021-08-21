@@ -6,9 +6,9 @@ import (
 	"github.com/kubemq-io/kubemq-community/pkg/authentication/local"
 	"github.com/nats-io/nuid"
 
-	sdk "github.com/kubemq-io/kubemq-go"
 	"github.com/kubemq-io/kubemq-community/config"
 	"github.com/kubemq-io/kubemq-community/pkg/authentication"
+	sdk "github.com/kubemq-io/kubemq-go"
 	"github.com/stretchr/testify/require"
 	"testing"
 	"time"

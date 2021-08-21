@@ -1,1 +1,3 @@
-{"LastError":"nats: no servers available for connection"}
+{
+  "LastError": "nats: no servers available for connection"
+}

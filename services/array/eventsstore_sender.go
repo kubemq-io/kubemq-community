@@ -32,7 +32,6 @@ func EventsStoreSenderLogging(l *logging.Logger) EventsStoreSenderMiddleware {
 	}
 }
 
-
 func ChainEventsStoreSenders(ess EventsStoreSender, essm ...EventsStoreSenderMiddleware) EventsStoreSender {
 	sender := ess
 	for _, middleware := range essm {

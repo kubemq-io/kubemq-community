@@ -20,7 +20,6 @@ func (qsf QuerySenderFunc) SendQuery(ctx context.Context, req *pb.Request) (*pb.
 
 type QuerySenderMiddleware func(QuerySender) QuerySender
 
-
 func QuerySenderLogging(l *logging.Logger) QuerySenderMiddleware {
 	return func(qs QuerySender) QuerySender {
 		return QuerySenderFunc(func(ctx context.Context, req *pb.Request) (*pb.Response, error) {

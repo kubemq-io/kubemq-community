@@ -6,7 +6,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-
 func Test_LogVarsLoadEnvironmentVars(t *testing.T) {
 	c := &LogConfig{
 		Level: "trace",

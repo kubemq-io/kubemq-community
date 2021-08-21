@@ -18,7 +18,6 @@ import (
 	"go.uber.org/atomic"
 )
 
-
 const (
 	prefixEvents      = "_EVENTS_."
 	prefixEventsStore = "_EVENTS_STORE_."
@@ -40,9 +39,9 @@ type Client struct {
 	logger  *logging.Logger
 
 	isUp            *atomic.Bool
-	baseConn   *nats.Conn
-	subscriber *nats.Subscription
-	storeConn  stan.Conn
+	baseConn        *nats.Conn
+	subscriber      *nats.Subscription
+	storeConn       stan.Conn
 	queueConn       stan.Conn
 	storeSubscriber stan.Subscription
 	writeDeadline   time.Duration
@@ -266,8 +265,6 @@ func (c *Client) SubscribeToEvents(ctx context.Context, subReq *pb.Subscribe, ev
 	return err
 }
 
-
-
 func (c *Client) SubscribeToEventsStore(ctx context.Context, subReq *pb.Subscribe, eventsCh chan *pb.EventReceive) error {
 
 	c.mu.Lock()
@@ -290,7 +287,7 @@ func (c *Client) SubscribeToEventsStore(ctx context.Context, subReq *pb.Subscrib
 		var err error
 		eventReceive, err := unmarshalToEventReceive(msg.Data)
 		if err != nil {
-			c.logger.Errorf("error on unmarshal message, %s",  err.Error())
+			c.logger.Errorf("error on unmarshal message, %s", err.Error())
 			return
 		}
 		eventReceive.Timestamp = msg.Timestamp
@@ -465,5 +462,3 @@ func (c *Client) SubscribeToQueries(ctx context.Context, subReq *pb.Subscribe, r
 	})
 	return err
 }
-
-

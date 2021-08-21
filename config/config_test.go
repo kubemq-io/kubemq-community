@@ -6,7 +6,6 @@ import (
 	"testing"
 )
 
-
 func Test_getConfigFromEnv(t *testing.T) {
 	*configFile = ""
 	err := os.Setenv("LOG_LEVEL", "debug")

@@ -1841,4 +1841,3 @@ func TestGRPCServer_QueuesClient_Poll_InvalidRequestByServer(t *testing.T) {
 	require.Nil(t, response)
 
 }
-

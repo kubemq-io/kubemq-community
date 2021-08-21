@@ -34,7 +34,6 @@ func AckAllQueueMessagesLogging(l *logging.Logger) AckAllQueueMessagesMiddleware
 	}
 }
 
-
 func ChainAckAllQueueMessages(aq AckAllQueueMessages, aqm ...AckAllQueueMessagesMiddleware) AckAllQueueMessages {
 	sender := aq
 	for _, middleware := range aqm {

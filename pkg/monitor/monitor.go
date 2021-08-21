@@ -29,7 +29,7 @@ func NewEventsMonitor(ctx context.Context, dataChan chan *Transport,
 	logger := logging.GetLogFactory().NewLogger("event_monitor")
 	var nc *client.Client
 	var err error
-	switch  monitorRequest.Kind {
+	switch monitorRequest.Kind {
 	case entities.KindTypeEventStore:
 		nc, err = client.NewStoreClient(ncOpts)
 	case entities.KindTypeEvent:

@@ -33,7 +33,6 @@ func EventsStoreReceiverLogging(l *logging.Logger) EventsStoreReceiverMiddleware
 	}
 }
 
-
 func ChainEventsStoreReceiver(esr EventsStoreReceiver, esrm ...EventsStoreReceiverMiddleware) EventsStoreReceiver {
 	receiver := esr
 	for _, middleware := range esrm {

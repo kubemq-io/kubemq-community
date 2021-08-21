@@ -6,7 +6,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-
 func Test_AuthenticationLoadEnvironmentVars(t *testing.T) {
 	authConfig := &AuthenticationConfig{
 		Enable: true,

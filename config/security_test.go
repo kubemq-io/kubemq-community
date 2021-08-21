@@ -5,7 +5,6 @@ import (
 	"testing"
 )
 
-
 func Test_SecurityVarsLoadEnvironmentVars(t *testing.T) {
 	c := &SecurityConfig{
 		Cert: &ResourceConfig{

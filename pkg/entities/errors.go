@@ -2,7 +2,6 @@ package entities
 
 import "github.com/pkg/errors"
 
-
 var (
 	ErrInvalidClientID              = errors.New("Error 101: invalid clientID value, cannot be empty")
 	ErrInvalidChannel               = errors.New("Error 102: invalid channel value, cannot be empty")
@@ -78,7 +77,7 @@ var (
 
 	ErrNoAccessNoEnforcer    = errors.New("Error 414: access denied, no enforcer to validate")
 	ErrNoAccessInvalidParams = errors.New("Error 415: access denied, invalid access parameters")
-	ErrAuthInvalidAuthToken = errors.New("Error 421: authentication verification failed, ")
-	ErrAuthInvalidKeyFile   = errors.New("Error 423: authentication configuration error, error loading key file, ")
-	ErrAuthInvalidNoKey     = errors.New("Error 424: authentication configuration error, no verify key provided")
+	ErrAuthInvalidAuthToken  = errors.New("Error 421: authentication verification failed, ")
+	ErrAuthInvalidKeyFile    = errors.New("Error 423: authentication configuration error, error loading key file, ")
+	ErrAuthInvalidNoKey      = errors.New("Error 424: authentication configuration error, no verify key provided")
 )

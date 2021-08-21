@@ -96,8 +96,6 @@ func (e *Exporter) ChannelSummery(cs ...[]*ChannelStats) ([]*ChannelsSummery, er
 	return toChannelsSummery(stats), nil
 }
 
-
-
 func (e *Exporter) Clients() ([]*ClientsStats, int, error) {
 	st, err := e.Stats()
 	if err != nil {
@@ -132,9 +130,9 @@ func (e *Exporter) Snapshot() (*api.Snapshot, error) {
 
 func initExporter(ctx context.Context) *Exporter {
 	e := &Exporter{
-		reportMetricCh:    make(chan *reportMetric, reportMetricSize),
-		metricsDropped:    atomic.NewUint64(0),
-		lastUpdate:        atomic.NewInt64(0),
+		reportMetricCh: make(chan *reportMetric, reportMetricSize),
+		metricsDropped: atomic.NewUint64(0),
+		lastUpdate:     atomic.NewInt64(0),
 	}
 	if !e.initPromMetrics() {
 		return nil

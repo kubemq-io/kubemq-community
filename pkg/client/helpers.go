@@ -30,7 +30,6 @@ func UnmarshalToEventReceive(data []byte) (*pb.EventReceive, error) {
 	return qm, err
 }
 
-
 func ParseSubscriptionRequest(req *pb.Subscribe) []stan.SubscriptionOption {
 	var list = []stan.SubscriptionOption{stan.DurableName(fmt.Sprintf("%s-%s", req.Channel, req.Group))}
 	switch req.EventsStoreTypeData {
@@ -51,7 +50,6 @@ func ParseSubscriptionRequest(req *pb.Subscribe) []stan.SubscriptionOption {
 	}
 	return list
 }
-
 
 func validateOptions(opts *Options, forQueue bool) error {
 	if opts.ClientID == "" {

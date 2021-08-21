@@ -49,13 +49,13 @@ rest:
   bodyLimit: ""
   cors:
     allowCredentials: false
-    allowHeaders: []
+    allowHeaders: [ ]
     allowMethods:
-    - GET
-    - POST
+      - GET
+      - POST
     allowOrigins:
-    - '*'
-    exposeHeaders: []
+      - '*'
+    exposeHeaders: [ ]
     maxAge: 0
   port: 9090
   readTimeout: 60

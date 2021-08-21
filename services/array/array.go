@@ -38,11 +38,11 @@ type Array struct {
 	appConfig  *config.Config
 	clients    sync.Map
 
-	logger            *logging.Logger
-	sharedClient      *client.Client
-	sharedStoreClient *client.Client
-	sharedQueueClient *client.QueueClient
-	monitorMiddleware *monitor.Middleware
+	logger                     *logging.Logger
+	sharedClient               *client.Client
+	sharedStoreClient          *client.Client
+	sharedQueueClient          *client.QueueClient
+	monitorMiddleware          *monitor.Middleware
 	isShutdown                 *atomic.Bool
 	clientsCount               *atomic.Int64
 	authorizationService       *authorization.Service
@@ -50,8 +50,8 @@ type Array struct {
 	queueClientsPool           *client.QueuePool
 	queueDownstreamClientsPool *client.QueuePool
 	queueDownstreamCounter     *atomic.Uint64
-	queueUpstreamClientsPool *client.QueuePool
-	queueUpstreamCounter     *atomic.Uint64
+	queueUpstreamClientsPool   *client.QueuePool
+	queueUpstreamCounter       *atomic.Uint64
 }
 
 func Start(ctx context.Context, appConfig *config.Config) (*Array, error) {
@@ -144,7 +144,7 @@ func Start(ctx context.Context, appConfig *config.Config) (*Array, error) {
 	na.sharedQueueClient.SetDelayMessagesProcessor(na.context)
 	na.eventSender = ChainEventsSenders(na.sharedClient, EventsSenderLogging(na.logger))
 	na.eventsStoreSender = ChainEventsStoreSenders(na.sharedStoreClient, EventsStoreSenderLogging(na.logger))
-	na.QuerySender = ChainQuerySender(na.sharedClient,  QuerySenderMonitor(na.monitorMiddleware), QuerySenderLogging(na.logger))
+	na.QuerySender = ChainQuerySender(na.sharedClient, QuerySenderMonitor(na.monitorMiddleware), QuerySenderLogging(na.logger))
 	na.CommandSender = ChainCommandSender(na.sharedClient, CommandSenderMonitor(na.monitorMiddleware), CommandSenderLogging(na.logger))
 	na.ResponseSender = ChainResponseSender(na.sharedClient, ResponseSenderLogging(na.logger))
 	//go na.watch()
@@ -319,8 +319,6 @@ func (a *Array) NewQueueDownstreamClientFromPool() (*client.QueueClient, string,
 func (a *Array) ReleaseQueueDownstreamClientFromPool(id string) {
 	a.queueDownstreamClientsPool.ReleaseClient(id)
 }
-
-
 
 func (a *Array) NewQueueUpstreamClientFromPool() (*client.QueueClient, string, error) {
 	if a.isShutdown.Load() {
@@ -671,7 +669,7 @@ func (a *Array) sendQueueMessagesBatch(ctx context.Context, req *pb.QueueMessage
 			return nil, err
 		}
 	}
-	nc,id, err := a.NewQueueUpstreamClientFromPool()
+	nc, id, err := a.NewQueueUpstreamClientFromPool()
 	if err != nil {
 		return nil, err
 	}
