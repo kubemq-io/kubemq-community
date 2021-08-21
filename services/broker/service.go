@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"go.uber.org/atomic"
-	"path/filepath"
 	"time"
 
 	"github.com/kubemq-io/kubemq-community/pkg/http"
@@ -25,7 +24,6 @@ const (
 
 type State int8
 
-// Possible server states
 const (
 	Standalone State = iota
 )
@@ -42,31 +40,9 @@ type Service struct {
 	appConfig               *config.Config
 	cancelFunc              context.CancelFunc
 	disableMetricsReporting bool
-	loadStatus              *loadStatus
 	stateNotifiers          *HealthNotifier
 }
 
-func joinStoreLocationFile(appConfig *config.Config, filename string) string {
-	return filepath.Join("./", appConfig.Store.StorePath, appConfig.Host, filename)
-}
-
-func (s *Service) loadLastStatusFile() {
-	file := joinStoreLocationFile(s.appConfig, "last_status.json")
-	l, err := NewFromFile(file)
-	if err != nil {
-		s.logger.Errorf("error loading last_status file: %s", err.Error())
-		s.loadStatus = &loadStatus{}
-		return
-	}
-	s.loadStatus = l
-}
-func (s *Service) saveLastStatusFile() {
-	file := joinStoreLocationFile(s.appConfig, "last_status.json")
-	err := s.loadStatus.Save(file)
-	if err != nil {
-		s.logger.Errorf("error saving last_status file: %s", err.Error())
-	}
-}
 func New(appConfig *config.Config) *Service {
 	s := &Service{
 		Nats:      nil,
@@ -84,11 +60,8 @@ func (s *Service) Start(ctx context.Context) (*Service, error) {
 	ctx, cancel := context.WithCancel(ctx)
 	s.cancelFunc = cancel
 	s.logger = logging.GetLogFactory().NewLogger("broker")
-	s.loadLastStatusFile()
-	defer s.saveLastStatusFile()
 	err := s.startAsBroker(ctx, s.appConfig)
 	if err != nil {
-		s.loadStatus.UpdateLastError(err.Error())
 		return nil, err
 	}
 	return s, nil

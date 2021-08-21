@@ -104,13 +104,6 @@ func (s *Service) startAsBroker(ctx context.Context, appConfig *config.Config) e
 	}
 
 	s.NatsOptions, s.SnatsOptions = s.getBrokerOptions(appConfig)
-	if s.loadStatus.HasRecoveryErrors() {
-		s.logger.Infof("last attempt to load ended with error, removing the store to recover, error: %s", s.loadStatus.LastError)
-		err := os.RemoveAll(appConfig.Store.StorePath)
-		if err != nil {
-			return err
-		}
-	}
 	ns, err := natsd.NewServer(s.NatsOptions)
 	if err != nil {
 		return err

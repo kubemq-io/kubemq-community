@@ -31,7 +31,7 @@ tasks:
       GOARCH: amd64
     cmds:
       - docker build --build-arg VERSION={{.VERSION}} . -t kubemq/{{.BINARY_NAME}}-community:{{.VERSION}}
-      - docker tag kubemq/{{.BINARY_NAME}}:{{.VERSION}} kubemq/{{.BINARY_NAME}}-community:latest
+      - docker tag kubemq/{{.BINARY_NAME}}-community:{{.VERSION}} kubemq/{{.BINARY_NAME}}-community:latest
   release:
     cmds:
       - git tag -a {{.VERSION}} -m {{.VERSION}}

@@ -200,8 +200,6 @@ func getConfigRecord(paths ...string) *Config {
 	loadedConfigFile, err := getConfigFile()
 	if err == nil {
 		viper.SetConfigFile(filepath.Join(filepath.Dir(path), loadedConfigFile))
-	} else {
-		log.Println(fmt.Sprintf("error on load config file: %s", err.Error()))
 	}
 	_ = viper.BindEnv("Host", "HOST")
 	_ = viper.ReadInConfig()
