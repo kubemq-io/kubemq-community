@@ -58,7 +58,7 @@ KubeMQ SDKs support list:
 | C#    |  https://github.com/kubemq-io/kubemq-CSharp  |  
 | Java    | https://github.com/kubemq-io/kubemq-Java |  
 | Python    |  https://github.com/kubemq-io/kubemq-Python  |  
-| Node    |  https://github.com/kubemq-io/kubemq-node |  
+| Node    |  https://github.com/kubemq-io/kubemq-js |  
 | Go    | https://github.com/kubemq-io/kubemq-go |  
 | REST    |  https://postman.kubemq.io/ |  
 
