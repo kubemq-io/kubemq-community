@@ -27,15 +27,7 @@ func init() {
 	})
 
 }
-func waitForCount(fn func() int, required, timeout int) error {
-	for i := 0; i < 10*timeout; i++ {
-		if fn() == required {
-			return nil
-		}
-		time.Sleep(100 * time.Millisecond)
-	}
-	return fmt.Errorf("timeout, want %d, got %d", required, fn())
-}
+
 func waitForAtLeastCount(fn func() int, atLeast, timeout int) error {
 	for i := 0; i < 10*timeout; i++ {
 		if fn() >= atLeast {
@@ -689,4 +681,3 @@ func TestStoreClient_Single_MaxQueues(t *testing.T) {
 	require.True(t, md.Sent)
 
 }
-

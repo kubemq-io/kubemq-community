@@ -4,13 +4,11 @@ import (
 	"context"
 	"fmt"
 	"github.com/kubemq-io/kubemq-community/config"
-	"github.com/kubemq-io/kubemq-community/pkg/attach"
-	"github.com/kubemq-io/kubemq-community/pkg/k8s"
 	"github.com/kubemq-io/kubemq-community/pkg/utils"
 	"github.com/spf13/cobra"
 )
 
-type CommandsAttachOptions struct {
+type AttachOptions struct {
 	cfg       *config.Config
 	include   []string
 	exclude   []string
@@ -37,7 +35,7 @@ var commandsAttachLong = `Attach command allows to display 'commands' channel co
 var commandsAttachShort = `Attach to 'commands' channels command`
 
 func NewCmdCommandsAttach(ctx context.Context, cfg *config.Config) *cobra.Command {
-	o := &CommandsAttachOptions{
+	o := &AttachOptions{
 		cfg: cfg,
 	}
 	cmd := &cobra.Command{
@@ -50,8 +48,7 @@ func NewCmdCommandsAttach(ctx context.Context, cfg *config.Config) *cobra.Comman
 		Run: func(cmd *cobra.Command, args []string) {
 			ctx, cancel := context.WithCancel(ctx)
 			defer cancel()
-			utils.CheckErr(k8s.SetTransport(ctx, cfg))
-			utils.CheckErr(o.Complete(args, cfg.ConnectionType), cmd)
+			utils.CheckErr(o.Complete(args), cmd)
 			utils.CheckErr(o.Validate())
 			utils.CheckErr(o.Run(ctx))
 		},
@@ -62,7 +59,7 @@ func NewCmdCommandsAttach(ctx context.Context, cfg *config.Config) *cobra.Comman
 	return cmd
 }
 
-func (o *CommandsAttachOptions) Complete(args []string, transport string) error {
+func (o *AttachOptions) Complete(args []string) error {
 
 	if len(args) == 0 {
 		return fmt.Errorf("missing channel argument")
@@ -76,12 +73,12 @@ func (o *CommandsAttachOptions) Complete(args []string, transport string) error 
 	return nil
 }
 
-func (o *CommandsAttachOptions) Validate() error {
+func (o *AttachOptions) Validate() error {
 	return nil
 }
 
-func (o *CommandsAttachOptions) Run(ctx context.Context) error {
-	err := attach.Run(ctx, o.cfg, o.resources, o.include, o.exclude)
+func (o *AttachOptions) Run(ctx context.Context) error {
+	err := utils.Run(ctx, o.cfg, o.resources, o.include, o.exclude)
 	if err != nil {
 		return err
 	}

@@ -9,16 +9,16 @@ import (
 
 var commandsExamples = `
 	# Execute send commands 
-	kubemq commands send
+	kubemq commands send 
 
 	# Execute receive commands
-	kubemq commands receive
+	kubemq commands receive 
 
 	# Execute attach to 'commands' channel
-	kubemq commands attach
+	kubemq commands attach 
 `
-var commandsLong = `Execute Kubemq 'commands' RPC commands`
-var commandsShort = `Execute Kubemq 'commands' RPC commands`
+var commandsLong = `Execute Kubemq 'commands `
+var commandsShort = `Execute Kubemq 'commands'`
 
 func NewCmdCommands(ctx context.Context, cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{

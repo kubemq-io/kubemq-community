@@ -1,14 +1,14 @@
-package commands
+package queries
 
 import (
 	"context"
 	"fmt"
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/kubemq-io/kubemq-community/pkg/utils"
-	"time"
 
 	"github.com/kubemq-io/kubemq-community/config"
 	"github.com/spf13/cobra"
+	"time"
 )
 
 type ReceiveOptions struct {
@@ -18,17 +18,17 @@ type ReceiveOptions struct {
 	autoResponse bool
 }
 
-var commandsReceiveExamples = `
-	# Receive commands from a 'commands' channel (blocks until next body)
-	kubemq commands receive some-channel
+var queriesReceiveExamples = `
+	# Receive 'queries'  from a 'queries' channel (blocks until next body)
+	kubemq queries receive some-channel
 
-	# Receive commands from a 'commands' channel with group (blocks until next body)
-	kubemq commands receive some-channel -g G1
+	# Receive 'queries' from a 'queries' channel with group(blocks until next body)
+	kubemq queries receive some-channel -g G1
 `
-var commandsReceiveLong = `Receive (Subscribe) command allows to consume a body from 'commands' channel and response with appropriate reply`
-var commandsReceiveShort = `Receive a body from 'commands' channel command`
+var queriesReceiveLong = `Receive (Subscribe) command allows to receive a body from a 'queries' channel and response with appropriate reply`
+var queriesReceiveShort = `Receive a body from a 'queries' channel`
 
-func NewCmdCommandsReceive(ctx context.Context, cfg *config.Config) *cobra.Command {
+func NewCmdQueriesReceive(ctx context.Context, cfg *config.Config) *cobra.Command {
 	o := &ReceiveOptions{
 		cfg: cfg,
 	}
@@ -36,9 +36,9 @@ func NewCmdCommandsReceive(ctx context.Context, cfg *config.Config) *cobra.Comma
 
 		Use:     "receive",
 		Aliases: []string{"r", "rec", "subscribe", "sub"},
-		Short:   commandsReceiveShort,
-		Long:    commandsReceiveLong,
-		Example: commandsReceiveExamples,
+		Short:   queriesReceiveShort,
+		Long:    queriesReceiveLong,
+		Example: queriesReceiveExamples,
 		Run: func(cmd *cobra.Command, args []string) {
 			ctx, cancel := context.WithCancel(ctx)
 			defer cancel()
@@ -48,13 +48,12 @@ func NewCmdCommandsReceive(ctx context.Context, cfg *config.Config) *cobra.Comma
 		},
 	}
 
-	cmd.PersistentFlags().StringVarP(&o.group, "group", "g", "", "set 'commands' channel consumer group (load balancing)")
-	cmd.PersistentFlags().BoolVarP(&o.autoResponse, "auto-response", "a", false, "set auto response executed command for each command received")
+	cmd.PersistentFlags().StringVarP(&o.group, "group", "g", "", "set 'queries' channel consumer group (load balancing)")
+	cmd.PersistentFlags().BoolVarP(&o.autoResponse, "auto-response", "a", false, "set auto response executed query")
 	return cmd
 }
 
 func (o *ReceiveOptions) Complete(args []string) error {
-
 	if len(args) >= 1 {
 		o.channel = args[0]
 		return nil
@@ -77,24 +76,25 @@ func (o *ReceiveOptions) Run(ctx context.Context) error {
 	}()
 
 	errChan := make(chan error, 1)
-	commandsChan, err := client.SubscribeToCommands(ctx, o.channel, o.group, errChan)
+	queriesChan, err := client.SubscribeToQueries(ctx, o.channel, o.group, errChan)
 
 	if err != nil {
-		utils.Println(fmt.Errorf("receive commands messages, %s", err.Error()).Error())
+		utils.Println(fmt.Errorf("receive 'queries' messages, %s", err.Error()).Error())
 	}
 	for {
-		utils.Println("waiting for the next command body...")
+		utils.Println("waiting for the next query body...")
 		select {
 		case err := <-errChan:
 			return fmt.Errorf("server disconnected with error: %s", err.Error())
-		case command, opened := <-commandsChan:
+
+		case query, opened := <-queriesChan:
 			if !opened {
 				utils.Println("server disconnected")
 				return nil
 			}
-			printCommandReceive(command)
+			printQueryReceive(query)
 			if o.autoResponse {
-				err = client.R().SetRequestId(command.Id).SetExecutedAt(time.Now()).SetResponseTo(command.ResponseTo).Send(ctx)
+				err = client.R().SetRequestId(query.Id).SetExecutedAt(time.Now()).SetResponseTo(query.ResponseTo).SetBody([]byte("executed your query")).Send(ctx)
 				if err != nil {
 					return err
 				}
@@ -113,13 +113,25 @@ func (o *ReceiveOptions) Run(ctx context.Context) error {
 				return err
 			}
 			if isExecuted {
-				err = client.R().SetRequestId(command.Id).SetExecutedAt(time.Now()).SetResponseTo(command.ResponseTo).Send(ctx)
+
+				respBody := ""
+				prompt := &survey.Input{
+					Renderer: survey.Renderer{},
+					Message:  "Set response body",
+					Default:  "response-to",
+					Help:     "",
+				}
+				err := survey.AskOne(prompt, &respBody)
+				if err != nil {
+					return err
+				}
+				err = client.R().SetRequestId(query.Id).SetExecutedAt(time.Now()).SetResponseTo(query.ResponseTo).SetBody([]byte(respBody)).Send(ctx)
 				if err != nil {
 					return err
 				}
 				continue
 			}
-			err = client.R().SetRequestId(command.Id).SetError(fmt.Errorf("commnad not executed")).SetResponseTo(command.ResponseTo).Send(ctx)
+			err = client.R().SetRequestId(query.Id).SetError(fmt.Errorf("query not executed")).SetResponseTo(query.ResponseTo).Send(ctx)
 			if err != nil {
 				return err
 			}

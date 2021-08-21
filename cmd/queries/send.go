@@ -1,13 +1,14 @@
-package commands
+package queries
 
 import (
 	"context"
 	"fmt"
-	"github.com/kubemq-io/kubemq-community/config"
 	"github.com/kubemq-io/kubemq-community/pkg/utils"
 	"github.com/kubemq-io/kubemq-community/pkg/uuid"
-	"github.com/spf13/cobra"
 	"time"
+
+	"github.com/kubemq-io/kubemq-community/config"
+	"github.com/spf13/cobra"
 )
 
 type SendOptions struct {
@@ -18,20 +19,21 @@ type SendOptions struct {
 	timeout  int
 }
 
-var commandsSendExamples = `
-	# Send command to a 'commands' channel
-	kubemq commands send some-channel some-command
+var queriesSendExamples = `
+	# Send query to a 'queries' channel
+	kubemq queries send some-channel some-query
 	
-	# Send command to a 'commands' channel with metadata
-	kubemq commands send some-channel some-body -m some-metadata
+	# Send query to a 'queries' channel with metadata
+	kubemq queries send some-channel some-body -m some-metadata
 	
-	# Send command to a 'commands' channel with 120 seconds timeout
-	kubemq commands send some-channel some-body -o 120
+	# Send query to a 'queries' channel with 120 seconds timeout
+	kubemq queries send some-channel some-body -o 120
+	
 `
-var commandsSendLong = `Send command allow to send messages to 'commands' channel with an option to set command time-out`
-var commandsSendShort = `Send messages to 'commands' channel command`
+var queriesSendLong = `Send command allow to send messages to 'queries' channel with an option to set query time-out and caching parameters`
+var queriesSendShort = `Send messages to a 'queries' channel command`
 
-func NewCmdCommandsSend(ctx context.Context, cfg *config.Config) *cobra.Command {
+func NewCmdQueriesSend(ctx context.Context, cfg *config.Config) *cobra.Command {
 	o := &SendOptions{
 		cfg: cfg,
 	}
@@ -39,9 +41,9 @@ func NewCmdCommandsSend(ctx context.Context, cfg *config.Config) *cobra.Command 
 
 		Use:     "send",
 		Aliases: []string{"s"},
-		Short:   commandsSendShort,
-		Long:    commandsSendLong,
-		Example: commandsSendExamples,
+		Short:   queriesSendShort,
+		Long:    queriesSendLong,
+		Example: queriesSendExamples,
 		Run: func(cmd *cobra.Command, args []string) {
 			ctx, cancel := context.WithCancel(ctx)
 			defer cancel()
@@ -83,20 +85,20 @@ func (o *SendOptions) Run(ctx context.Context) error {
 	defer func() {
 		_ = client.Close()
 	}()
-
-	msg := client.C().
+	fmt.Println("Sending Query:")
+	msg := client.Q().
 		SetChannel(o.channel).
 		SetId(uuid.New()).
 		SetBody([]byte(o.body)).
 		SetMetadata(o.metadata).
 		SetTimeout(time.Duration(o.timeout) * time.Second)
-	fmt.Println("Sending Command:")
-	printCommand(msg)
+
+	printQuery(msg)
 	res, err := msg.Send(ctx)
 	if err != nil {
-		return fmt.Errorf("sending commands body, %s", err.Error())
+		return fmt.Errorf("sending query body, %s", err.Error())
 	}
-	fmt.Println("Getting Command Response:")
-	printCommandResponse(res)
+	fmt.Println("Getting Query Response:")
+	printQueryResponse(res)
 	return nil
 }

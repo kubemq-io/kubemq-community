@@ -5,13 +5,16 @@ type ClientConfig struct {
 	GrpcPort   int    `json:"grpc_port"`
 	ApiAddress string `json:"api_address"`
 	AuthToken  string `json:"auth_token"`
+	ClientID   string `json:"client_id"`
 }
 
 func defaultClientConfig() *ClientConfig {
 	return &ClientConfig{
 		GrpcHost:   "localhost",
 		GrpcPort:   50000,
-		ApiAddress: "localhost:8080",
+		ApiAddress: "http://localhost:8080",
+		AuthToken:  "",
+		ClientID:   "",
 	}
 }
 

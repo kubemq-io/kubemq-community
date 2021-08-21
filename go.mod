@@ -3,6 +3,7 @@ module github.com/kubemq-io/kubemq-community
 go 1.15
 
 require (
+	github.com/AlecAivazis/survey/v2 v2.2.16
 	github.com/BurntSushi/toml v0.4.1
 	github.com/casbin/casbin/v2 v2.36.1
 	github.com/fortytw2/leaktest v1.3.0

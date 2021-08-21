@@ -14,18 +14,6 @@ import (
 	"time"
 )
 
-func isDuplicatedMessages(messages []*pb.QueueMessage) bool {
-	dupMap := make(map[string]string)
-	for _, msg := range messages {
-		_, ok := dupMap[msg.MessageID]
-		if ok {
-			return true
-		} else {
-			dupMap[msg.MessageID] = msg.MessageID
-		}
-	}
-	return false
-}
 func TestQueueClient_PollClient_AutoAck_Poll_Exact(t *testing.T) {
 	defer leaktest.Check(t)()
 	ctx, cancel := context.WithCancel(context.Background())

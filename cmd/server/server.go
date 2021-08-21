@@ -15,7 +15,7 @@ import (
 )
 
 type Options struct {
-	cfg      *config.Config
+	cfg *config.Config
 }
 
 func NewCmdServer(ctx context.Context, cfg *config.Config) *cobra.Command {
@@ -26,7 +26,7 @@ func NewCmdServer(ctx context.Context, cfg *config.Config) *cobra.Command {
 
 		Use:     "server",
 		Aliases: []string{"s", "serve"},
-		Short:   "start kubemq server",
+		Short:   "Start kubemq server",
 		Run: func(cmd *cobra.Command, args []string) {
 			ctx, cancel := context.WithCancel(ctx)
 			defer cancel()
