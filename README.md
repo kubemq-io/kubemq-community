@@ -1,3 +1,4 @@
+[![Go Report Card](https://goreportcard.com/badge/github.com/kubemq-io/kubemq-community)](https://goreportcard.com/report/github.com/kubemq-io/kubemq-community)
 # What is KubeMQ Community?
 
 KubeMQ Community is the community version of KubeMQ, the Kubernetive native message broker.
