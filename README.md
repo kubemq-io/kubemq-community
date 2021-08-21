@@ -9,7 +9,7 @@ KubeMQ Community is the open-source version of KubeMQ, the Kubernetes native mes
 ## Kubernetes
 
 ``` bash  
-kubectl apply -f https://deploy.kubemq.io/community/  
+kubectl apply -f https://deploy.kubemq.io/community
 ```  
 
 ## Docker
