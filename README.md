@@ -1,7 +1,7 @@
 ![Docker](https://github.com/kubemq-io/kubemq-community/actions/workflows/docker-image.yml/badge.svg) ![goreleaser](https://github.com/kubemq-io/kubemq-community/actions/workflows/goreleaser.yml/badge.svg) ![Go Report Card](https://goreportcard.com/badge/github.com/kubemq-io/kubemq-community)
 # What is KubeMQ Community?
 
-KubeMQ Community is the community version of KubeMQ, the Kubernetive native message broker.
+KubeMQ Community is the open sources version of KubeMQ, the Kubernetes native message broker.
 [More about KubeMQ](https://kubemq.io/)
 
 # Installation
@@ -22,8 +22,7 @@ docker run -d -p 8080:8080 -p 50000:50000 -p 9090:9090 kubemq/kubemq-community:l
 
 ## Binaries
 
-1. Download the latest version of KubeMQ Community
-   from [Releases](https://github.com/kubemq-io/kubemq-community/releases)
+1. Download the latest version of KubeMQ Community from [Releases](https://github.com/kubemq-io/kubemq-community/releases)
 2. Unpack the downloaded archive
 3. Run ```kubemq server```
 
