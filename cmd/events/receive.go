@@ -22,8 +22,8 @@ var eventsReceiveExamples = `
 	kubemq events receive some-channel -g G1
 
 `
-var eventsReceiveLong = `Receive (Subscribe) command allows to consume one or many messages from 'events' channel`
-var eventsReceiveShort = `Receive a body from 'events' channel command`
+var eventsReceiveLong = `Events receive (Subscribe) command allows to consume one or many messages from 'events' channel`
+var eventsReceiveShort = `Events receive a body from 'events' channel command`
 
 func NewCmdEventsReceive(ctx context.Context, cfg *config.Config) *cobra.Command {
 	o := &ReceiveOptions{

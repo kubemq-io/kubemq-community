@@ -33,8 +33,8 @@ var eventsReceiveExamples = `
 	# Receive messages from an 'events channel' with group(blocks until next body)
 	kubemq events_store receive some-channel -g G1
 `
-var eventsReceiveLong = `Receive (Subscribe) command allows to consume messages from an 'events store' with options to set offset parameters`
-var eventsReceiveShort = `Receive a messages from an 'events store'`
+var eventsReceiveLong = `Events-Store receive (Subscribe) command allows to consume messages from an 'events store' with options to set offset parameters`
+var eventsReceiveShort = `Events-Store receive a messages from an 'events store'`
 
 func NewCmdEventsStoreReceive(ctx context.Context, cfg *config.Config) *cobra.Command {
 	o := &ReceiveOptions{

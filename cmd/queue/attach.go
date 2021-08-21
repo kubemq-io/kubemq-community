@@ -33,8 +33,8 @@ var queueAttachExamples = `
 	# Attach to some-queue queue channel and output running messages filter by exclude regex (not-some*)
 	kubemq queue attach some-queue -e not-some*
 `
-var queueAttachLong = `Attach command allows to display 'queues' channel content for debugging proposes`
-var queueAttachShort = `Attach to 'queues' channels command`
+var queueAttachLong = `Queues attach command allows to display 'queues' channel content for debugging proposes`
+var queueAttachShort = `Queues attach to 'queues' channels command`
 
 func NewCmdQueueAttach(ctx context.Context, cfg *config.Config) *cobra.Command {
 	o := &AttachOptions{

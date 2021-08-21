@@ -17,9 +17,8 @@ func CheckErr(err error, cmd ...*cobra.Command) {
 	}
 	fmt.Fprintln(os.Stderr, msg)
 	if cmd != nil {
-		if cmd[0].HasExample() {
-			fmt.Fprintln(os.Stderr, "Try:", cmd[0].Example)
-		}
+		_ = cmd[0].Help()
+
 	}
 	os.Exit(1)
 }

@@ -31,8 +31,8 @@ var eventsSendExamples = `
 	# Send (Publish) batch of 100 messages to a 'events' channel in stream mode
 	kubemq events send some-channel some-body -m 100 -s
 `
-var eventsSendLong = `Send command allows to send (publish) one or many messages to an 'events' channel`
-var eventsSendShort = `Send messages to an 'events' channel command`
+var eventsSendLong = `Events send command allows to send (publish) one or many messages to an 'events' channel`
+var eventsSendShort = `Events send messages to an 'events' channel command`
 
 func NewCmdEventsSend(ctx context.Context, cfg *config.Config) *cobra.Command {
 	o := &SendOptions{

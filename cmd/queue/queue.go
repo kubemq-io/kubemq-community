@@ -9,25 +9,25 @@ import (
 
 var queueExamples = `
 	# Execute send 'queues' command
-	kubemqctl queues send
+	kubemq queues send
 
 	# Execute attached to 'queues' command
-	kubemqctl queues attach
+	kubemq queues attach
 
 	# Execute receive 'queues' command
-	kubemqctl queues receive
+	kubemq queues receive
 	
 	# Execute list 'queues' command
-	kubemqctl queues list
+	kubemq queues list
 
 	# Execute peek 'queues' command
-	kubemqctl queues peek
+	kubemq queues peek
 
 	# Execute ack 'queues' command
-	 kubemqctl queues ack
+	 kubemq queues ack
 
 	# Execute stream 'queues' command
-	kubemqctl queues stream
+	kubemq queues stream
 `
 var queueLong = `Execute Kubemq 'queues' commands`
 var queueShort = `Execute Kubemq 'queues' commands`

@@ -23,8 +23,8 @@ var queuePeekExamples = `
 	# Peek 3 messages from a queue and wait for 5 seconds
 	kubemq queue peek some-channel -m 3 -w 5
 `
-var queuePeekLong = `Peek command allows to peek one or many messages from a queue channel without removing them from the queue`
-var queuePeekShort = `Peek a messages from a queue channel command`
+var queuePeekLong = `Queues peek command allows to peek one or many messages from a queue channel without removing them from the queue`
+var queuePeekShort = `Queues peek a messages from a queue channel command`
 
 func NewCmdQueuePeek(ctx context.Context, cfg *config.Config) *cobra.Command {
 	o := &PeekOptions{

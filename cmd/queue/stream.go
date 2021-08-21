@@ -20,13 +20,13 @@ type StreamOptions struct {
 
 var queueStreamExamples = `
 	# Stream 'queues' message in transaction mode
-	kubemqctl queue stream q1
+	kubemq queue stream q1
 
 	# Stream 'queues' message in transaction mode with visibility set to 120 seconds and wait time of 180 seconds
-	kubemqctl queue stream q1 -v 120 -w 180
+	kubemq queue stream q1 -v 120 -w 180
 `
-var queueStreamLong = `Stream command allows to receive message from a queue in push mode response an appropriate action`
-var queueStreamShort = `Stream a message from a queue command`
+var queueStreamLong = `Queues stream command allows to receive message from a queue in push mode response an appropriate action`
+var queueStreamShort = `Queues stream a message from a queue command`
 
 func NewCmdQueueStream(ctx context.Context, cfg *config.Config) *cobra.Command {
 	o := &StreamOptions{

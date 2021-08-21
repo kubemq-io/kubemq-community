@@ -31,8 +31,8 @@ var commandsAttachExamples = `
 	# attach to some-commands 'commands' channel and output running messages filter by exclude regex (not-some*)
 	kubemq commands attach some-commands -e not-some*
 `
-var commandsAttachLong = `Attach command allows to display 'commands' channel content for debugging proposes`
-var commandsAttachShort = `Attach to 'commands' channels command`
+var commandsAttachLong = `Command attach command allows to display 'commands' channel content for debugging proposes`
+var commandsAttachShort = `Command attach to 'commands' channels command`
 
 func NewCmdCommandsAttach(ctx context.Context, cfg *config.Config) *cobra.Command {
 	o := &AttachOptions{

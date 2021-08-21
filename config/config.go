@@ -14,13 +14,12 @@ import (
 
 	"strings"
 
-	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 )
 
 var appConfig *Config
 var once sync.Once
-var configFile = pflag.String("config", "./config.yaml", "set config file name")
+var configFile = "./config.yaml"
 
 type ServerState struct {
 	Host                string `json:"host"`
@@ -64,10 +63,6 @@ type Config struct {
 	Routing         *RoutingConfig        `json:"routing"`
 	startServerTime int64
 	version         string
-}
-
-func initFlags() {
-	pflag.Parse()
 }
 
 func (c *Config) SetVersion(value string) *Config {
@@ -177,8 +172,8 @@ func getConfigDataFromLocalFile(filename string) (string, error) {
 }
 
 func getConfigFile() (string, error) {
-	if *configFile != "" {
-		loadedConfigFile, err := getConfigDataFromLocalFile(*configFile)
+	if configFile != "" {
+		loadedConfigFile, err := getConfigDataFromLocalFile(configFile)
 		if err != nil {
 			return "", err
 		}
@@ -195,7 +190,6 @@ func getConfigFile() (string, error) {
 func getConfigRecord(paths ...string) *Config {
 	appConfig := GetDefaultConfig()
 	appConfig.startServerTime = time.Now().Unix()
-	initFlags()
 	for _, paths := range paths {
 		viper.AddConfigPath(paths)
 	}

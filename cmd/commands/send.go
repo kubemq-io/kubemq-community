@@ -28,8 +28,8 @@ var commandsSendExamples = `
 	# Send command to a 'commands' channel with 120 seconds timeout
 	kubemq commands send some-channel some-body -o 120
 `
-var commandsSendLong = `Send command allow to send messages to 'commands' channel with an option to set command time-out`
-var commandsSendShort = `Send messages to 'commands' channel command`
+var commandsSendLong = `Command send command allow to send messages to 'commands' channel with an option to set command time-out`
+var commandsSendShort = `Command send messages to 'commands' channel command`
 
 func NewCmdCommandsSend(ctx context.Context, cfg *config.Config) *cobra.Command {
 	o := &SendOptions{

@@ -31,8 +31,8 @@ var eventsAttachExamples = `
 	# attach to some-events 'events' channel and output running messages filter by exclude regex (not-some*)
 	kubemq events attach some-events -e not-some*
 `
-var eventsAttachLong = `Attach command allows to display 'events' channel content for debugging proposes`
-var eventsAttachShort = `Attach to 'events' channels command`
+var eventsAttachLong = `Events attach command allows to display 'events' channel content for debugging proposes`
+var eventsAttachShort = `Events attach to 'events' channels command`
 
 func NewCmdEventsAttach(ctx context.Context, cfg *config.Config) *cobra.Command {
 	o := &AttachOptions{

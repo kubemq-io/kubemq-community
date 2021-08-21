@@ -9,13 +9,13 @@ import (
 
 var eventsExamples = `
 	# Execute send 'events' command
- 	kubemqctl events send
+ 	kubemq events send
 
 	# Execute receive 'events' command
-	kubemqctl events receive
+	kubemq events receive
 
 	# Execute attach to an 'events' command
-	kubemqctl events attach
+	kubemq events attach
 
 `
 var eventsLong = `Execute Kubemq 'events' Pub/Sub commands`

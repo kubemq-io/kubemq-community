@@ -22,37 +22,37 @@ type SendOptions struct {
 
 var queueSendExamples = `
 	# Send message to a queue channel channel
-	kubemqctl queue send q1 some-message
+	kubemq queue send q1 some-message
 	
 	# Send message to a queue channel with metadata
-	kubemqctl queue send q1 some-message --metadata some-metadata
+	kubemq queue send q1 some-message --metadata some-metadata
 	
 	# Send 5 messages to a queues channel with metadata
-	kubemqctl queue send q1 some-message --metadata some-metadata -m 5
+	kubemq queue send q1 some-message --metadata some-metadata -m 5
 	
 	# Send message to a queue channel with a message expiration of 5 seconds
-	kubemqctl queue send q1 some-message -e 5
+	kubemq queue send q1 some-message -e 5
 
 	# Send message to a queue channel with a message delay of 5 seconds
-	kubemqctl queue send q1 some-message -d 5
+	kubemq queue send q1 some-message -d 5
 
 	# Send message to a queue channel with a message policy of max receive 5 times and dead-letter queue 'dead-letter'
-	kubemqctl queue send q1 some-message -r 5 -q dead-letter
+	kubemq queue send q1 some-message -r 5 -q dead-letter
 `
-var queueSendLong = `Send command allows to send one or many message to a queue channel`
-var queueSendShort = `Send a message to a queue channel command`
+var queueSendLong = `Queues send command allows to send one or many message to a queue channel`
+var queueSendShort = `Queues send a message to a queue channel command`
 
 func NewCmdQueueSend(ctx context.Context, cfg *config.Config) *cobra.Command {
 	o := &SendOptions{
 		cfg: cfg,
 	}
 	cmd := &cobra.Command{
-
-		Use:     "send",
-		Aliases: []string{"s"},
-		Short:   queueSendShort,
-		Long:    queueSendLong,
-		Example: queueSendExamples,
+		Use:        "send",
+		Aliases:    []string{"s"},
+		SuggestFor: nil,
+		Short:      queueSendShort,
+		Long:       queueSendLong,
+		Example:    queueSendExamples,
 		Run: func(cmd *cobra.Command, args []string) {
 			ctx, cancel := context.WithCancel(ctx)
 			defer cancel()
@@ -64,9 +64,9 @@ func NewCmdQueueSend(ctx context.Context, cfg *config.Config) *cobra.Command {
 	cmd.PersistentFlags().IntVarP(&o.expiration, "expiration", "e", 0, "set queue message expiration seconds")
 	cmd.PersistentFlags().IntVarP(&o.delay, "delay", "d", 0, "set queue message sending delay seconds")
 	cmd.PersistentFlags().IntVarP(&o.maxReceive, "max-receive", "r", 0, "set dead-letter max receive count")
-	cmd.PersistentFlags().IntVarP(&o.messages, "messages", "m", 1, "set dead-letter max receive count")
+	cmd.PersistentFlags().IntVarP(&o.messages, "messages", "i", 1, "set how many messages to send in a batch")
 	cmd.PersistentFlags().StringVarP(&o.deadLetter, "dead-letter-queue", "q", "", "set dead-letter queue name")
-	cmd.PersistentFlags().StringVarP(&o.metadata, "metadata", "", "", "set queue message metadata field")
+	cmd.PersistentFlags().StringVarP(&o.metadata, "metadata", "m", "", "set queue message metadata field")
 
 	return cmd
 }

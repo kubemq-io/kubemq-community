@@ -26,8 +26,8 @@ var queueReceiveExamples = `
 	# Watching 'queues' channel messages
 	kubemq queue receive q1 -w
 `
-var queueReceiveLong = `Receive command allows to receive one or many messages from a queue channel`
-var queueReceiveShort = `Receive a messages from a queue channel command`
+var queueReceiveLong = `Queues receive command allows to receive one or many messages from a queue channel`
+var queueReceiveShort = `Queues receive a messages from a queue channel command`
 
 func NewCmdQueueReceive(ctx context.Context, cfg *config.Config) *cobra.Command {
 	o := &ReceiveOptions{

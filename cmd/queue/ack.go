@@ -21,8 +21,8 @@ var queueAckExamples = `
 	# Ack all messages in a 'queues' channel 'some-long-queue' with 30 seconds of wait to complete operation
 	kubemq queue ack some-long-queue -w 30
 `
-var queueAckLong = `Ack command allows to clear / remove / ack all messages in a 'queues' channel`
-var queueAckShort = `Ack all messages in a 'queues' channel`
+var queueAckLong = `Queues ack command allows to clear / remove / ack all messages in a 'queues' channel`
+var queueAckShort = `Queues ack all messages in a 'queues' channel`
 
 func NewCmdQueueAck(ctx context.Context, cfg *config.Config) *cobra.Command {
 	o := &AckOptions{

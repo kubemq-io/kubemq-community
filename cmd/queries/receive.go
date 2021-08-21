@@ -25,8 +25,8 @@ var queriesReceiveExamples = `
 	# Receive 'queries' from a 'queries' channel with group(blocks until next body)
 	kubemq queries receive some-channel -g G1
 `
-var queriesReceiveLong = `Receive (Subscribe) command allows to receive a body from a 'queries' channel and response with appropriate reply`
-var queriesReceiveShort = `Receive a body from a 'queries' channel`
+var queriesReceiveLong = `Queries receive (Subscribe) command allows to receive a body from a 'queries' channel and response with appropriate reply`
+var queriesReceiveShort = `Queries receive a body from a 'queries' channel`
 
 func NewCmdQueriesReceive(ctx context.Context, cfg *config.Config) *cobra.Command {
 	o := &ReceiveOptions{

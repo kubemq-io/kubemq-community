@@ -30,8 +30,8 @@ var queriesSendExamples = `
 	kubemq queries send some-channel some-body -o 120
 	
 `
-var queriesSendLong = `Send command allow to send messages to 'queries' channel with an option to set query time-out and caching parameters`
-var queriesSendShort = `Send messages to a 'queries' channel command`
+var queriesSendLong = `Queries send command allow to send messages to 'queries' channel with an option to set query time-out and caching parameters`
+var queriesSendShort = `Queries send messages to a 'queries' channel command`
 
 func NewCmdQueriesSend(ctx context.Context, cfg *config.Config) *cobra.Command {
 	o := &SendOptions{

@@ -31,8 +31,8 @@ var queriesAttachExamples = `
 	# attach to some-queries 'queries' channel and output running messages filter by exclude regex (not-some*)
 	kubemq queries attach some-queries -e not-some*
 `
-var queriesAttachLong = `Attach command allows to display 'queries' channel content for debugging proposes`
-var queriesAttachShort = `Attach to 'queries' channels command`
+var queriesAttachLong = `Queries attach command allows to display 'queries' channel content for debugging proposes`
+var queriesAttachShort = `Queries attach to 'queries' channels command`
 
 func NewCmdQueriesAttach(ctx context.Context, cfg *config.Config) *cobra.Command {
 	o := &AttachOptions{

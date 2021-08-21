@@ -25,8 +25,8 @@ var commandsReceiveExamples = `
 	# Receive commands from a 'commands' channel with group (blocks until next body)
 	kubemq commands receive some-channel -g G1
 `
-var commandsReceiveLong = `Receive (Subscribe) command allows to consume a body from 'commands' channel and response with appropriate reply`
-var commandsReceiveShort = `Receive a body from 'commands' channel command`
+var commandsReceiveLong = `Command receive (Subscribe) command allows to consume a body from 'commands' channel and response with appropriate reply`
+var commandsReceiveShort = `Command receive a body from 'commands' channel command`
 
 func NewCmdCommandsReceive(ctx context.Context, cfg *config.Config) *cobra.Command {
 	o := &ReceiveOptions{

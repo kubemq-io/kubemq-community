@@ -109,8 +109,8 @@ func runner(ctx context.Context, cfg *config.Config, resType, resChannel string,
 		}
 		inc = append(inc, rin)
 	}
-
-	uri := fmt.Sprintf("%s/v1/stats/attach?channel=%s&kind=%s", cfg.Client.ApiAddress, resChannel, resType)
+	wsAddress := strings.Replace(cfg.Client.ApiAddress, "http", "ws", -1)
+	uri := fmt.Sprintf("%s/v1/stats/attach?channel=%s&kind=%s", wsAddress, resChannel, resType)
 
 	rxChan := make(chan string, 10)
 	txChan := make(chan string, 10)

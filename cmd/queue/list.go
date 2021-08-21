@@ -27,8 +27,8 @@ var queueListExamples = `
 	# Get a list of queues / clients filtered by 'some-queue' channel only
 	kubemq queue list -f some-queue
 `
-var queueListLong = `List command allows to get a list of 'queues' channels / clients with details`
-var queueListShort = `Get a list of 'queues' channels / clients command`
+var queueListLong = `Queues list command allows to get a list of 'queues' channels`
+var queueListShort = `Queues list of 'queues' channels`
 
 func NewCmdQueueList(ctx context.Context, cfg *config.Config) *cobra.Command {
 	o := &ListOptions{
@@ -81,7 +81,6 @@ func (o *ListOptions) Run(ctx context.Context) error {
 		return err
 	}
 	q.printChannelsTab(o.filter)
-	q.printClientsTab(o.filter)
 	return nil
 }
 
@@ -128,25 +127,5 @@ func (q *Queues) printChannelsTab(filter string) {
 
 	}
 	fmt.Fprintf(w, "\nTOTAL CHANNELS:\t%d\n", cnt)
-	w.Flush()
-}
-func (q *Queues) printClientsTab(filter string) {
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', tabwriter.TabIndent)
-	fmt.Fprintf(w, "\nCLIENTS:\n")
-	fmt.Fprintln(w, "CLIENT_ID\tCHANNEL\tACTIVE\tLAST_SENT\tPENDING\tSTALLED")
-	cnt := 0
-	for _, q := range q.Queues {
-		for _, c := range q.Clients {
-			if filter == "" || strings.Contains(c.ClientId, filter) {
-				if c.ClientId == "" {
-					c.ClientId = "N/A"
-				}
-				cnt++
-				fmt.Fprintf(w, "%s\t%s\t%t\t%d\t%d\t%t\n", c.ClientId, q.Name, c.Active, c.LastSequenceSent, c.Pending, c.IsStalled)
-			}
-		}
-
-	}
-	fmt.Fprintf(w, "\nTOTAL CLIENTS:\t%d\n", cnt)
 	w.Flush()
 }
