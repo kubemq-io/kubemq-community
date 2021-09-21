@@ -3,6 +3,7 @@ package events_store
 import (
 	"context"
 	"fmt"
+
 	"github.com/kubemq-io/kubemq-community/config"
 	"github.com/kubemq-io/kubemq-community/pkg/utils"
 	"github.com/kubemq-io/kubemq-community/pkg/uuid"
@@ -93,9 +94,12 @@ func (o *SendOptions) Run(ctx context.Context) error {
 			SetId(uuid.New()).
 			SetBody([]byte(o.body)).
 			SetMetadata(o.metadata)
-		_, err := msg.Send(ctx)
+		eventStoreResult, err := msg.Send(ctx)
 		if err != nil {
 			return fmt.Errorf("sending 'events store' body, %s", err.Error())
+		}
+		if eventStoreResult.Err != nil {
+			return fmt.Errorf("sending 'events store' body, %s", eventStoreResult.Err.Error())
 		}
 		printEventStore(msg)
 	}
