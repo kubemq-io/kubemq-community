@@ -15,6 +15,13 @@ jobs:
         with:
           fetch-depth: 0
       -
+        name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.17
+      - name: install-ibmmq-sdk
+        run: sh ./ci/ibmmq-sdk/install-linux.sh
+      -
         name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v2
         with:
