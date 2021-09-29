@@ -30,9 +30,9 @@ docker run -d -p 8080:8080 -p 50000:50000 -p 9090:9090 kubemq/kubemq-community:l
 
 |Name | Description | Github | 
 |--|--|--| 
-| **KubeMQ Targets** | Connect KubeMQ Message Broker with external systems and cloud services |[KubeMQ Targets](https://github.com/kubemq-hub/kubemq-targets)|
-| **KubeMQ Sources** | Connects external systems and cloud services with KubeMQ message queue broker |[KubeMQ Sources](https://github.com/kubemq-hub/kubemq-sources)|
-| **KubeMQ Bridges** | bridge, replicate, aggregate, and transform messages between KubeMQ |[KubeMQ Bridges](https://github.com/kubemq-hub/kubemq-bridges)|
+| **KubeMQ Targets** | Connect KubeMQ Message Broker with external systems and cloud services |[KubeMQ Targets](https://github.com/kubemq-io/kubemq-targets)|
+| **KubeMQ Sources** | Connects external systems and cloud services with KubeMQ message queue broker |[KubeMQ Sources](https://github.com/kubemq-io/kubemq-sources)|
+| **KubeMQ Bridges** | bridge, replicate, aggregate, and transform messages between KubeMQ |[KubeMQ Bridges](https://github.com/kubemq-io/kubemq-bridges)|
 
 # KubeMQ CLI
 
