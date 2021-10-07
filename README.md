@@ -72,7 +72,7 @@ KubeMQ SDKs support list:
 | Node    |  https://github.com/kubemq-io/node-sdk-cookbook |  
 | Go    | https://github.com/kubemq-io/go-sdk-cookbook|  
 
-## Documatation
+## Documentation
 
 Visit our [Extensive KubeMQ Documentation](https://docs.kubemq.io/).
 
