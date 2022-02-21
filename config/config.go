@@ -3,14 +3,15 @@ package config
 import (
 	"encoding/base64"
 	"fmt"
-	"github.com/BurntSushi/toml"
-	"github.com/ghodss/yaml"
 	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
 	"sync"
 	"time"
+
+	"github.com/BurntSushi/toml"
+	"github.com/ghodss/yaml"
 
 	"strings"
 
@@ -118,88 +119,147 @@ func getConfigFormat(in []byte) string {
 	c := &Config{}
 	err := yaml.Unmarshal(in, c)
 	if err == nil {
-		return "yaml"
+		return ".yaml"
 	}
 	err = toml.Unmarshal(in, c)
 	if err == nil {
-		return "toml"
+		return ".toml"
 	}
 	return ""
 }
 
-func decodeBase64(in string) string {
+func decodeBase64(in string) (string, error) {
 	// base64 string cannot contain space so this is indication of base64 string
 	if !strings.Contains(in, " ") {
 		sDec, err := base64.StdEncoding.DecodeString(in)
 		if err != nil {
-			log.Println(fmt.Sprintf("error decoding config file base64 string: %s ", err.Error()))
-			return in
+			return "", fmt.Errorf("error decoding config file base64 string: %s ", err.Error())
 		}
-		return string(sDec)
+		return string(sDec), nil
 	}
-	return in
+	return "", fmt.Errorf("invalid base64 string")
 }
+
+// Attempt to find config file and return absolute path
+func findAbsConfigPath(path string) (string, error) {
+	// Check to see if yaml or toml
+	fileExt := filepath.Ext(path)
+	if fileExt != ".yaml" && fileExt != ".toml" {
+		return "", fmt.Errorf("invalid file format")
+	}
+
+	// next check if it's already absolute path
+	if filepath.IsAbs(path) {
+		return path, nil
+	}
+
+	// TODO: Currently this tries to load from exec path then CWD to mimmic the previous behavior
+	// Consider switching the order to CWD then exec path
+
+	// Try to find the file relative to the executable path
+	execPath, err := os.Executable()
+	if err == nil {
+		execPath = filepath.Join(filepath.Dir(execPath), path)
+		_, statErr := os.Stat(execPath)
+		if statErr == nil {
+			return execPath, nil
+		}
+	}
+
+	// Get the absolute path using the current directory
+	cwdPath, err := filepath.Abs(path)
+	_, statErr := os.Stat(cwdPath)
+	if err != nil && statErr != nil {
+		return cwdPath, nil
+	}
+
+	return "", fmt.Errorf("config file not found")
+}
+
+func validateConfigFormat(path string) bool {
+	data, err := ioutil.ReadFile(path)
+	if err != nil {
+		return false
+	}
+
+	fileExt := getConfigFormat(data)
+	if fileExt == "" {
+		return false
+	}
+
+	return strings.HasSuffix(path, fileExt)
+}
+
 func getConfigDataFromEnv() (string, error) {
-	envConfigData, ok := os.LookupEnv("CONFIG")
-	envConfigData = decodeBase64(envConfigData)
+	envConfig, ok := os.LookupEnv("CONFIG")
 	if ok {
-		fileExt := getConfigFormat([]byte(envConfigData))
-		if fileExt == "" {
-			return "", fmt.Errorf("invalid environment config format")
+		// Try to decode base64 string
+		envConfigData, err := decodeBase64(envConfig)
+		if err == nil {
+			fileExt := getConfigFormat([]byte(envConfigData))
+			if fileExt == "" {
+				return "", fmt.Errorf("invalid environment config format")
+			}
+			confFile, err := filepath.Abs("./config" + fileExt)
+			if err != nil {
+				return "", fmt.Errorf("error getting absolute path for config: %s", err.Error())
+			}
+			err = ioutil.WriteFile(confFile, []byte(envConfigData), 0600)
+			if err != nil {
+				return "", fmt.Errorf("cannot save environment config file")
+			}
+			return confFile, nil
 		}
-		err := ioutil.WriteFile("./config."+fileExt, []byte(envConfigData), 0600)
-		if err != nil {
-			return "", fmt.Errorf("cannot save environment config file")
+
+		// Try to use config as a path
+		absPath, err := getConfigDataFromLocalFile(envConfig)
+		if err == nil {
+			return absPath, nil
 		}
-		return "./config." + fileExt, nil
 	}
 	return "", fmt.Errorf("no config data from environment variable")
 }
 
 func getConfigDataFromLocalFile(filename string) (string, error) {
-	data, err := ioutil.ReadFile(filename)
+	absPath, err := findAbsConfigPath(filename)
+	if err != nil {
+		return "", fmt.Errorf("error getting absolute path for config: %s", err.Error())
+	}
+
+	if !validateConfigFormat(absPath) {
+		return "", fmt.Errorf("invalid config format")
+	}
+	return absPath, nil
+}
+
+// Gets the absolute path for the config file
+func getConfigFile() (string, error) {
+	// Attempt to get config file from env
+	loadedConfigFile, err := getConfigDataFromEnv()
+	if err == nil {
+		return loadedConfigFile, nil
+	}
+
+	// Get config from local file, checking executing directory then CWD
+	loadedConfigFile, err = getConfigDataFromLocalFile(configFile)
 	if err != nil {
 		return "", err
 	}
-	fileExt := getConfigFormat(data)
-	if fileExt == "" {
-		return "", fmt.Errorf("invalid file format")
-	}
-	if strings.HasSuffix(filename, "."+fileExt) {
-		return filename, nil
-	}
-	return filename + "." + fileExt, nil
-}
 
-func getConfigFile() (string, error) {
-	if configFile != "" {
-		loadedConfigFile, err := getConfigDataFromLocalFile(configFile)
-		if err != nil {
-			return "", err
-		}
-		return loadedConfigFile, nil
-	} else {
-		loadedConfigFile, err := getConfigDataFromEnv()
-		if err != nil {
-			return "", err
-		}
-		return loadedConfigFile, nil
-	}
+	return loadedConfigFile, nil
 }
 
 func getConfigRecord(paths ...string) *Config {
 	appConfig := GetDefaultConfig()
 	appConfig.startServerTime = time.Now().Unix()
+	// TODO: Should we not check these paths like we do the config loaded from configFile?
 	for _, paths := range paths {
 		viper.AddConfigPath(paths)
 	}
-	path, err := os.Executable()
-	if err != nil {
-		return nil
-	}
+
 	loadedConfigFile, err := getConfigFile()
 	if err == nil {
-		viper.SetConfigFile(filepath.Join(filepath.Dir(path), loadedConfigFile))
+		viper.SetConfigFile(loadedConfigFile)
 	}
 	_ = viper.BindEnv("Host", "HOST")
 	_ = viper.ReadInConfig()
@@ -212,7 +272,7 @@ func getConfigRecord(paths ...string) *Config {
 		appConfig.Host = GetHostname()
 	}
 	d, _ := yaml.Marshal(appConfig)
-	_ = ioutil.WriteFile("./config.yaml", d, 0600)
+	_ = ioutil.WriteFile(configFile, d, 0600)
 	return appConfig
 }
 
