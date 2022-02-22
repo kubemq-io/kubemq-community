@@ -145,7 +145,7 @@ func findAbsConfigPath(path string) (string, error) {
 	// Check to see if yaml or toml
 	fileExt := filepath.Ext(path)
 	if fileExt != ".yaml" && fileExt != ".toml" {
-		return "", fmt.Errorf("invalid file format")
+		return "", fmt.Errorf("invalid file format '%s'", fileExt)
 	}
 
 	// next check if it's already absolute path
@@ -169,11 +169,11 @@ func findAbsConfigPath(path string) (string, error) {
 	// Get the absolute path using the current directory
 	cwdPath, err := filepath.Abs(path)
 	_, statErr := os.Stat(cwdPath)
-	if err != nil && statErr != nil {
+	if err == nil && statErr == nil {
 		return cwdPath, nil
 	}
 
-	return "", fmt.Errorf("config file not found")
+	return "", fmt.Errorf("config file not found in exec path '%s' or cwd '%s'", execPath, cwdPath)
 }
 
 func validateConfigFormat(path string) bool {
@@ -213,9 +213,10 @@ func getConfigDataFromEnv() (string, error) {
 
 		// Try to use config as a path
 		absPath, err := getConfigDataFromLocalFile(envConfig)
-		if err == nil {
-			return absPath, nil
+		if err != nil {
+			return "", fmt.Errorf("cannot convert '%s' to absolute path: %s", envConfig, err.Error())
 		}
+		return absPath, nil
 	}
 	return "", fmt.Errorf("no config data from environment variable")
 }
@@ -223,7 +224,7 @@ func getConfigDataFromEnv() (string, error) {
 func getConfigDataFromLocalFile(filename string) (string, error) {
 	absPath, err := findAbsConfigPath(filename)
 	if err != nil {
-		return "", fmt.Errorf("error getting absolute path for config: %s", err.Error())
+		return "", fmt.Errorf("error getting absolute path for '%s': %s", filename, err.Error())
 	}
 
 	if !validateConfigFormat(absPath) {
