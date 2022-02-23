@@ -1,11 +1,11 @@
 package config
 
 type ClientConfig struct {
-	GrpcHost   string `json:"grpc_host"`
-	GrpcPort   int    `json:"grpc_port"`
-	ApiAddress string `json:"api_address"`
-	AuthToken  string `json:"auth_token"`
-	ClientID   string `json:"client_id"`
+	GrpcHost   string `json:"grpcHost"`
+	GrpcPort   int    `json:"grpcPort"`
+	ApiAddress string `json:"apiAddress"`
+	AuthToken  string `json:"authToken"`
+	ClientID   string `json:"clientId"`
 }
 
 func defaultClientConfig() *ClientConfig {
