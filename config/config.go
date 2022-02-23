@@ -261,6 +261,9 @@ func getConfigRecord(paths ...string) *Config {
 	loadedConfigFile, err := getConfigFile()
 	if err == nil {
 		viper.SetConfigFile(loadedConfigFile)
+		log.Println(fmt.Sprintf("loaded configuration from %s", loadedConfigFile))
+	} else {
+		log.Println(fmt.Sprintf("no configuration file found, using defaults"))
 	}
 	_ = viper.BindEnv("Host", "HOST")
 	_ = viper.ReadInConfig()
@@ -273,7 +276,12 @@ func getConfigRecord(paths ...string) *Config {
 		appConfig.Host = GetHostname()
 	}
 	d, _ := yaml.Marshal(appConfig)
-	_ = ioutil.WriteFile(configFile, d, 0600)
+
+	if loadedConfigFile != "" {
+		_ = ioutil.WriteFile(loadedConfigFile, d, 0600)
+	} else {
+		_ = ioutil.WriteFile(configFile, d, 0600)
+	}
 	return appConfig
 }
 
