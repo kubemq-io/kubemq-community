@@ -49,6 +49,7 @@ data:
   CONFIG: |-
     api:
       port: 8080
+      networkTransport: tcp
     authentication:
       config: ""
       enable: false
@@ -77,6 +78,7 @@ data:
     grpc:
       bodyLimit: 104857600
       port: 50000
+      networkTransport: tcp
       subBuffSize: 100
     log:
       level: info
@@ -104,6 +106,7 @@ data:
         exposeHeaders: []
         maxAge: 0
       port: 9090
+      networkTransport: tcp
       readTimeout: 60
       subBuffSize: 100
       writeTimeout: 60
