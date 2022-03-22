@@ -4,11 +4,12 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
+	"net"
+
 	"github.com/kubemq-io/kubemq-community/config"
 	"github.com/kubemq-io/kubemq-community/interfaces/grpc/middleware/recovery"
 	"github.com/kubemq-io/kubemq-community/services"
 	"go.uber.org/atomic"
-	"net"
 
 	"github.com/kubemq-io/kubemq-community/pkg/entities"
 
@@ -23,10 +24,11 @@ import (
 )
 
 type options struct {
-	port     int
-	security *config.SecurityConfig
-	maxSize  int
-	bufSize  int
+	port             int
+	security         *config.SecurityConfig
+	maxSize          int
+	bufSize          int
+	networkTransport string
 }
 
 func recoveryFunc(p interface{}) (err error) {
@@ -107,8 +109,8 @@ func configureServer(svc *services.SystemServices, logger *logging.Logger, opts 
 	return
 }
 
-func runServer(s *grpc.Server, port int) error {
-	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
+func runServer(s *grpc.Server, port int, transport string) error {
+	lis, err := net.Listen(transport, fmt.Sprintf(":%d", port))
 	if err != nil {
 		return err
 	}

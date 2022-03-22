@@ -2,13 +2,14 @@ package grpc
 
 import (
 	"context"
+	"io"
+	"time"
+
 	"github.com/kubemq-io/kubemq-community/config"
 	"github.com/kubemq-io/kubemq-community/pkg/entities"
 	"github.com/kubemq-io/kubemq-community/services/metrics"
 	pb "github.com/kubemq-io/protobuf/go"
 	"go.uber.org/atomic"
-	"io"
-	"time"
 
 	"github.com/kubemq-io/kubemq-community/services"
 
@@ -32,10 +33,11 @@ type Server struct {
 
 func NewServer(svc *services.SystemServices, appConfig *config.Config) (s *Server, err error) {
 	opts := &options{
-		port:     appConfig.Grpc.Port,
-		maxSize:  appConfig.Grpc.BodyLimit,
-		security: appConfig.Security,
-		bufSize:  appConfig.Grpc.SubBuffSize,
+		port:             appConfig.Grpc.Port,
+		maxSize:          appConfig.Grpc.BodyLimit,
+		security:         appConfig.Security,
+		bufSize:          appConfig.Grpc.SubBuffSize,
+		networkTransport: appConfig.Grpc.NetworkTransport,
 	}
 	s = &Server{
 		options:       opts,
@@ -56,7 +58,7 @@ func NewServer(svc *services.SystemServices, appConfig *config.Config) (s *Serve
 	}
 
 	pb.RegisterKubemqServer(gRpcServer, s)
-	err = runServer(gRpcServer, opts.port)
+	err = runServer(gRpcServer, opts.port, opts.networkTransport)
 	if err != nil {
 		s.logger.Errorw(" error grpc server", "error", err)
 		return nil, err

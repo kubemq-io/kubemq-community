@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+
 	"github.com/kubemq-io/kubemq-community/services/broker"
 
 	"github.com/kubemq-io/kubemq-community/services/metrics"
@@ -114,11 +115,12 @@ func CreateApiServer(ctx context.Context, broker *broker.Service, appConfigs ...
 
 	e.Server.ReadTimeout = time.Duration(180) * time.Second
 	e.Server.WriteTimeout = time.Duration(180) * time.Second
+	e.ListenerNetwork = appConfig.Api.NetworkTransport
 	s.echoWebServer = e
 
 	errCh := make(chan error, 1)
 	go func() {
-		errCh <- s.echoWebServer.Start(fmt.Sprintf("0.0.0.0:%d", appConfig.Api.Port))
+		errCh <- s.echoWebServer.Start(fmt.Sprintf(":%d", appConfig.Api.Port))
 	}()
 
 	select {

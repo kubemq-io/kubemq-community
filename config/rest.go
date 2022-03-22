@@ -3,15 +3,17 @@ package config
 import (
 	"fmt"
 	"net/http"
+	"regexp"
 )
 
 type RestConfig struct {
-	Port         int             `json:"port"`
-	ReadTimeout  int             `json:"readTimeout"`
-	WriteTimeout int             `json:"writeTimeout"`
-	SubBuffSize  int             `json:"subBuffSize"`
-	BodyLimit    string          `json:"bodyLimit"`
-	Cors         *RestCorsConfig `json:"cors"`
+	Port             int             `json:"port"`
+	ReadTimeout      int             `json:"readTimeout"`
+	WriteTimeout     int             `json:"writeTimeout"`
+	SubBuffSize      int             `json:"subBuffSize"`
+	BodyLimit        string          `json:"bodyLimit"`
+	NetworkTransport string          `json:"networkTransport"`
+	Cors             *RestCorsConfig `json:"cors"`
 }
 
 func defaultRestConfig() *RestConfig {
@@ -20,6 +22,7 @@ func defaultRestConfig() *RestConfig {
 		"Rest.Port",
 		"Rest.SubBuffSize",
 		"Rest.BodyLimit",
+		"Rest.NetworkTransport",
 		"Rest.ReadTimeout",
 		"Rest.WriteTimeout",
 		"Rest.Cors.AllowOrigins",
@@ -31,11 +34,12 @@ func defaultRestConfig() *RestConfig {
 	)
 
 	return &RestConfig{
-		Port:         9090,
-		ReadTimeout:  60,
-		WriteTimeout: 60,
-		SubBuffSize:  100,
-		BodyLimit:    "",
+		Port:             9090,
+		ReadTimeout:      60,
+		WriteTimeout:     60,
+		SubBuffSize:      100,
+		BodyLimit:        "",
+		NetworkTransport: "tcp",
 		Cors: &RestCorsConfig{
 			AllowOrigins:     []string{"*"},
 			AllowMethods:     []string{http.MethodGet, http.MethodPost},
@@ -48,7 +52,7 @@ func defaultRestConfig() *RestConfig {
 }
 
 func (r *RestConfig) Validate() error {
-
+	validNetworkTransport, _ := regexp.Compile("tcp(4|6)?")
 	if err := validatePort(r.Port); err != nil {
 		return NewConfigurationErrorf("bad REST configuration: %s", err.Error())
 	}
@@ -60,6 +64,9 @@ func (r *RestConfig) Validate() error {
 	}
 	if r.WriteTimeout < 0 {
 		return NewConfigurationError("bad REST configuration: WriteTimeout cannot be negative")
+	}
+	if validNetworkTransport.MatchString(r.NetworkTransport) {
+		return NewConfigurationError("bad REST configuration: NetworkTransport must be tcp or tcp4 or tcp6")
 	}
 	if r.Cors == nil {
 		return NewConfigurationError("bad Rest configuration: missing Cors configuration")

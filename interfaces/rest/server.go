@@ -3,6 +3,7 @@ package rest
 import (
 	"context"
 	"fmt"
+
 	"github.com/pkg/errors"
 	"go.uber.org/atomic"
 
@@ -74,6 +75,7 @@ func NewServer(svc *services.SystemServices, appConfigs ...*config.Config) (*Ser
 	e.HTTPErrorHandler = s.customHTTPErrorHandler
 	e.Use(middleware.CORSWithConfig(getCORSConfig(appConfig)))
 	e.Use(Logging(s.logger))
+	e.ListenerNetwork = appConfig.Rest.NetworkTransport
 
 	if svc.Broker != nil {
 		s.acceptTraffic.Store(svc.Broker.IsReady())
