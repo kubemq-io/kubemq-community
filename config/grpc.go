@@ -38,7 +38,7 @@ func (g *GrpcConfig) Validate() error {
 	if g.BodyLimit < 0 {
 		return NewConfigurationError("bad Grpc configuration: BodyLimit cannot be negative")
 	}
-	if validNetworkTransport.MatchString(g.NetworkTransport) {
+	if !validNetworkTransport.MatchString(g.NetworkTransport) {
 		return NewConfigurationError("bad Grpc configuration: NetworkTransport must be tcp or tcp4 or tcp6")
 	}
 	return nil

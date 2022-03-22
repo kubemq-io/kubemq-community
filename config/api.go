@@ -23,7 +23,7 @@ func (a *ApiConfig) Validate() error {
 	if err := validatePort(a.Port); err != nil {
 		return NewConfigurationErrorf("bad API config: %s", err.Error())
 	}
-	if validNetworkTransport.MatchString(a.NetworkTransport) {
+	if !validNetworkTransport.MatchString(a.NetworkTransport) {
 		return NewConfigurationError("bad API configuration: NetworkTransport must be tcp or tcp4 or tcp6")
 	}
 	return nil

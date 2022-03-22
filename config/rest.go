@@ -65,7 +65,7 @@ func (r *RestConfig) Validate() error {
 	if r.WriteTimeout < 0 {
 		return NewConfigurationError("bad REST configuration: WriteTimeout cannot be negative")
 	}
-	if validNetworkTransport.MatchString(r.NetworkTransport) {
+	if !validNetworkTransport.MatchString(r.NetworkTransport) {
 		return NewConfigurationError("bad REST configuration: NetworkTransport must be tcp or tcp4 or tcp6")
 	}
 	if r.Cors == nil {

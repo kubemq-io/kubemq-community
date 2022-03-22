@@ -8,11 +8,12 @@ import (
 
 func Test_RestsVarsLoadEnvironmentVars(t *testing.T) {
 	c := &RestConfig{
-		Port:         2,
-		ReadTimeout:  2,
-		WriteTimeout: 2,
-		SubBuffSize:  2,
-		BodyLimit:    "b",
+		Port:             2,
+		ReadTimeout:      2,
+		WriteTimeout:     2,
+		SubBuffSize:      2,
+		BodyLimit:        "b",
+		NetworkTransport: "tcp",
 		Cors: &RestCorsConfig{
 			AllowOrigins:     []string{"a", "b", "c"},
 			AllowMethods:     []string{"a", "b", "c"},
@@ -29,6 +30,7 @@ func Test_RestsVarsLoadEnvironmentVars(t *testing.T) {
 		"Rest.BodyLimit":             "b",
 		"Rest.ReadTimeout":           "2",
 		"Rest.WriteTimeout":          "2",
+		"Rest.NetworkTransport":      "tcp",
 		"Rest.Cors.AllowOrigins":     `a,b,c`,
 		"Rest.Cors.AllowMethods":     `a,b,c`,
 		"Rest.Cors.AllowHeaders":     `a,b,c`,

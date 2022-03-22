@@ -8,15 +8,17 @@ import (
 
 func Test_GrpcVarsLoadEnvironmentVars(t *testing.T) {
 	c := &GrpcConfig{
-		Port:        3,
-		SubBuffSize: 2,
-		BodyLimit:   2,
+		Port:             3,
+		SubBuffSize:      2,
+		BodyLimit:        2,
+		NetworkTransport: "tcp",
 	}
 
 	cEnv := map[string]string{
-		"Grpc.Port":        "3",
-		"Grpc.SubBuffSize": "2",
-		"Grpc.BodyLimit":   "2",
+		"Grpc.Port":             "3",
+		"Grpc.SubBuffSize":      "2",
+		"Grpc.BodyLimit":        "2",
+		"Grpc.NetworkTransport": "tcp",
 	}
 	setEnvValues(cEnv)
 	appConfig := getConfigRecord()

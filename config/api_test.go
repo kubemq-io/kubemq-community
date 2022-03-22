@@ -8,11 +8,13 @@ import (
 
 func Test_ApiLoadEnvironmentVars(t *testing.T) {
 	apiConfig := &ApiConfig{
-		Port: 8888,
+		Port:             8888,
+		NetworkTransport: "tcp",
 	}
 	apuEnv := map[string]string{
-		"Api.Enable": "true",
-		"Api.Port":   "8888",
+		"Api.Enable":           "true",
+		"Api.Port":             "8888",
+		"Api.NetworkTransport": "tcp",
 	}
 	setEnvValues(apuEnv)
 	appConfig := getConfigRecord()
@@ -30,7 +32,8 @@ func TestApiConfig_Validate(t *testing.T) {
 		{
 			name: "proper_config",
 			cfg: &ApiConfig{
-				Port: 8080,
+				Port:             8080,
+				NetworkTransport: "tcp",
 			},
 			wantErr: false,
 		},
