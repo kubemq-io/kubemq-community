@@ -82,7 +82,6 @@ func (o *SendOptions) Run(ctx context.Context) error {
 	defer func() {
 		_ = client.Close()
 	}()
-	fmt.Println("Sending command to channel: ", o.channel)
 	msg := client.C().
 		SetChannel(o.channel).
 		SetId(uuid.New()).
