@@ -48,7 +48,7 @@ metadata:
 data:
   CONFIG: |-
     api:
-      port: 8090
+      port: 8080
     authentication:
       config: ""
       enable: false
