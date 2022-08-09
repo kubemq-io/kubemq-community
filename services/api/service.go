@@ -5,11 +5,15 @@ import (
 	"fmt"
 	"github.com/kubemq-io/kubemq-community/config"
 	"github.com/kubemq-io/kubemq-community/pkg/api"
+	"github.com/kubemq-io/kubemq-community/pkg/logging"
 	"github.com/kubemq-io/kubemq-community/services/broker"
 	"github.com/kubemq-io/kubemq-community/services/metrics"
 	"github.com/labstack/echo/v4"
 	"sync"
+	"time"
 )
+
+const saveInterval = time.Second * 5
 
 type service struct {
 	sync.Mutex
@@ -17,6 +21,8 @@ type service struct {
 	broker          *broker.Service
 	metricsExporter *metrics.Exporter
 	lastSnapshot    *api.Snapshot
+	db              *api.DB
+	logger          *logging.Logger
 }
 
 func newService(appConfig *config.Config, broker *broker.Service, exp *metrics.Exporter) *service {
@@ -24,8 +30,59 @@ func newService(appConfig *config.Config, broker *broker.Service, exp *metrics.E
 		appConfig:       appConfig,
 		broker:          broker,
 		metricsExporter: exp,
+		db:              api.NewDB(),
 	}
 	return s
+}
+
+func (s *service) init(ctx context.Context, logger *logging.Logger) error {
+	s.logger = logger
+	if err := s.db.Init(); err != nil {
+		return fmt.Errorf("error initializing api db: %s", err.Error())
+	}
+
+	go s.run(ctx)
+	return nil
+}
+func (s *service) stop() error {
+	return s.db.Close()
+}
+func (s *service) run(ctx context.Context) {
+	s.logger.Infof("starting api snapshot service")
+	go func() {
+		ticker := time.NewTicker(saveInterval)
+		for {
+			select {
+			case <-ticker.C:
+				s.saveSnapshot(ctx)
+			case <-ctx.Done():
+				ticker.Stop()
+				return
+			}
+		}
+	}()
+
+}
+
+func (s *service) saveSnapshot(ctx context.Context) {
+	ss, err := s.snapshot(ctx)
+	if err != nil {
+		s.logger.Errorf("error getting snapshot: %s", err.Error())
+		return
+	}
+	if err := s.db.SaveSnapshot(ss); err != nil {
+		s.logger.Errorf("error saving snapshot: %s", err.Error())
+		return
+	}
+	//entities := ss.Entities.List()
+	//if len(entities) > 0 {
+	//	if err := s.db.AddEntities(entities); err != nil {
+	//		s.logger.Errorf("error saving entities snapshot: %s", err.Error())
+	//	} else {
+	//		s.logger.Infof("saved %d entities snapshot", len(entities))
+	//	}
+	//}
+
 }
 
 func (s *service) snapshot(ctx context.Context) (*api.Snapshot, error) {

@@ -43,9 +43,9 @@ func (g *Group) getBaseValues(side string) *BaseValues {
 }
 
 func (g *Group) SetValues(side string, value *BaseValues) {
-	bv := g.getBaseValues(side)
-	bv.Messages += value.Messages
-	bv.Volume += value.Volume
-	bv.Errors += value.Errors
-	bv.Waiting += value.Waiting
+	if side == "send" {
+		g.In = g.In.AddValues(value)
+	} else {
+		g.Out = g.Out.AddValues(value)
+	}
 }

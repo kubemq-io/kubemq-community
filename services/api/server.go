@@ -44,6 +44,9 @@ func CreateApiServer(ctx context.Context, broker *broker.Service, appConfigs ...
 		metricsExporter: metrics.GetExporter(),
 	}
 	s.apiService = newService(appConfig, broker, s.metricsExporter)
+	if err := s.apiService.init(ctx, s.logger); err != nil {
+		return nil, err
+	}
 	s.context, s.cancelFunc = context.WithCancel(ctx)
 	e := echo.New()
 	e.HideBanner = true
@@ -141,8 +144,8 @@ func (s *Server) AddHealthFunc(fn func() json.RawMessage) {
 
 func (s *Server) Close() {
 	_ = s.echoWebServer.Shutdown(context.Background())
+	_ = s.apiService.stop()
 	s.cancelFunc()
-
 }
 func loggingMiddleware(l *logging.Logger) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
