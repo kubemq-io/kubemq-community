@@ -68,11 +68,12 @@ func parseFamily(mf []*Family) (*api.System, []*Stats) {
 func makeEntities(st []*Stats) api.Entities {
 	en := api.NewEntities()
 	for _, item := range st {
+
 		family := item.Type
 		name := item.Channel
 		entity, _ := en.GetEntity(family, name)
 		if entity == nil {
-			entity = api.NewEntity(name)
+			entity = api.NewEntity(family, name)
 			en.AddEntity(family, entity)
 		}
 		switch item.Kind() {
@@ -83,6 +84,7 @@ func makeEntities(st []*Stats) api.Entities {
 		case "errors_count":
 			entity.SetValues(item.Side, "errors", item.Int64())
 		}
+		entity.SetClient(item.Side, item.ClientId)
 	}
 	return en
 }
