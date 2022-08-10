@@ -5,25 +5,26 @@ import (
 	"encoding/gob"
 	"encoding/json"
 	"fmt"
-	"sort"
 	"time"
 )
 
 type Entity struct {
-	Time int64       `json:"time"`
-	Type string      `json:"type"`
-	Name string      `json:"name"`
-	In   *BaseValues `json:"in"`
-	Out  *BaseValues `json:"out"`
+	Time     int64       `json:"time"`
+	Type     string      `json:"type"`
+	Name     string      `json:"name"`
+	In       *BaseValues `json:"in"`
+	Out      *BaseValues `json:"out"`
+	LastSeen int64       `json:"last_seen"`
 }
 
 func NewEntity(_type, name string) *Entity {
 	return &Entity{
-		Time: time.Now().UTC().Unix(),
-		Type: _type,
-		Name: name,
-		In:   NewBaseValues(),
-		Out:  NewBaseValues(),
+		Time:     time.Now().UTC().UnixMilli(),
+		Type:     _type,
+		Name:     name,
+		In:       NewBaseValues(),
+		Out:      NewBaseValues(),
+		LastSeen: 0,
 	}
 }
 
@@ -53,6 +54,11 @@ func (e *Entity) SetValues(side, kind string, value int64) *Entity {
 			e.In.Errors += value
 		case "waiting":
 			e.In.SetWaiting(value)
+		case "last_seen":
+			e.In.SetLastSeen(value)
+			if e.LastSeen < value {
+				e.LastSeen = value
+			}
 		}
 	} else {
 		switch kind {
@@ -64,6 +70,11 @@ func (e *Entity) SetValues(side, kind string, value int64) *Entity {
 			e.Out.Errors += value
 		case "waiting":
 			e.Out.SetWaiting(value)
+		case "last_seen":
+			e.Out.SetLastSeen(value)
+			if e.LastSeen < value {
+				e.LastSeen = value
+			}
 		}
 	}
 	return e
@@ -80,6 +91,7 @@ func (e *Entity) SetClient(side, value string) *Entity {
 func (e *Entity) Diff(other *Entity) *Entity {
 	newEntity := NewEntity(e.Type, e.Name)
 	newEntity.Time = e.Time
+	newEntity.LastSeen = e.LastSeen
 	newEntity.In = e.In.Diff(other.In)
 	newEntity.Out = e.Out.Diff(other.Out)
 	return newEntity
@@ -121,19 +133,18 @@ func (e *Entity) String() string {
 	return string(data)
 }
 
-func Aggregate(entities []*Entity) *Entity {
-	var entity *Entity
-	if len(entities) > 0 {
-		entity = entities[0]
-	} else {
-		entity = NewEntity("", "")
+func (e *Entity) Merge(other *Entity) *Entity {
+	if e.LastSeen < other.LastSeen {
+		e.LastSeen = other.LastSeen
+		e.In = e.In.Merge(other.In)
+		e.Out = e.Out.Merge(other.Out)
 	}
-	sort.Slice(entities, func(i, j int) bool {
-		return entities[i].Time < entities[j].Time
-	})
-	for _, e := range entities {
-		entity.In.AddValues(e.In)
-		entity.Out.AddValues(e.Out)
+	return e
+}
+
+func (e *Entity) IsActive() bool {
+	if e.LastSeen == 0 {
+		return false
 	}
-	return entity
+	return time.Now().UTC().UnixMilli()-e.LastSeen < 300000
 }

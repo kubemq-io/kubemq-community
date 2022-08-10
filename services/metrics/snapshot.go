@@ -10,15 +10,7 @@ func getSnapshot(mf []*Family) *api.Snapshot {
 	snapshot := api.NewSnapshot()
 	system, stats := parseFamily(mf)
 	entities := makeEntities(stats)
-	entitiesGroup := api.NewEntitiesGroup()
-	for family, entityList := range entities {
-		entitiesGroup.GroupEntities(family, entityList)
-	}
-	status := api.NewStatus()
-	status.SetSystem(system)
-	status.SetEntities(entitiesGroup)
-
-	snapshot.SetStatus(status)
+	snapshot.SetSystem(system)
 	snapshot.SetEntities(entities)
 	return snapshot
 }
@@ -65,16 +57,16 @@ func parseFamily(mf []*Family) (*api.System, []*Stats) {
 	return si, list
 }
 
-func makeEntities(st []*Stats) api.Entities {
-	en := api.NewEntities()
+func makeEntities(st []*Stats) *api.EntitiesGroup {
+	entitiesGroup := api.NewEntitiesGroup()
 	for _, item := range st {
-
 		family := item.Type
 		name := item.Channel
-		entity, _ := en.GetEntity(family, name)
+
+		entity, _ := entitiesGroup.GetEntity(family, name)
 		if entity == nil {
 			entity = api.NewEntity(family, name)
-			en.AddEntity(family, entity)
+			entitiesGroup.AddEntity(family, entity)
 		}
 		switch item.Kind() {
 		case "messages_count":
@@ -83,10 +75,13 @@ func makeEntities(st []*Stats) api.Entities {
 			entity.SetValues(item.Side, "volume", int64(item.Float64()))
 		case "errors_count":
 			entity.SetValues(item.Side, "errors", item.Int64())
+		case "last_seen":
+			entity.SetValues(item.Side, "last_seen", int64(item.Float64()))
 		}
 		entity.SetClient(item.Side, item.ClientId)
 	}
-	return en
+	entitiesGroup.ReCalcLastSeen()
+	return entitiesGroup
 }
 
 func getInt64Value(metrics []interface{}) int64 {

@@ -71,5 +71,8 @@ func (s *Stats) Kind() string {
 	if strings.Contains(s.Name, "messages_pending") {
 		return "messages_pending"
 	}
+	if strings.Contains(s.Name, "last_seen") {
+		return "last_seen"
+	}
 	return ""
 }

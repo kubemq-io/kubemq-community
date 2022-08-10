@@ -1,17 +1,13 @@
 package api
 
-import (
-	"github.com/dustin/go-humanize"
-	"math/big"
-)
-
 type BaseValues struct {
-	Messages  int64 `json:"messages"`
-	Volume    int64 `json:"volume"`
-	Errors    int64 `json:"errors"`
-	Waiting   int64 `json:"waiting"`
-	Clients   int64 `json:"clients"`
-	clientMap map[string]string
+	Messages  int64             `json:"messages"`
+	Volume    int64             `json:"volume"`
+	Errors    int64             `json:"errors"`
+	Waiting   int64             `json:"waiting"`
+	Clients   int64             `json:"clients"`
+	LastSeen  int64             `json:"last_seen"`
+	ClientMap map[string]string `json:"client_map"`
 }
 
 func NewBaseValues() *BaseValues {
@@ -21,7 +17,8 @@ func NewBaseValues() *BaseValues {
 		Errors:    0,
 		Waiting:   0,
 		Clients:   0,
-		clientMap: make(map[string]string),
+		LastSeen:  0,
+		ClientMap: make(map[string]string),
 	}
 }
 
@@ -42,9 +39,14 @@ func (b *BaseValues) SetWaiting(value int64) *BaseValues {
 	b.Waiting = value
 	return b
 }
+func (b *BaseValues) SetLastSeen(value int64) *BaseValues {
+	b.LastSeen = value
+	return b
+}
+
 func (b *BaseValues) AddClient(value string) *BaseValues {
-	b.clientMap[value] = value
-	b.Clients = int64(len(b.clientMap))
+	b.ClientMap[value] = value
+	b.Clients = int64(len(b.ClientMap))
 	return b
 }
 func (b *BaseValues) Diff(other *BaseValues) *BaseValues {
@@ -63,28 +65,47 @@ func (b *BaseValues) IsEqual(other *BaseValues) bool {
 		b.Waiting == other.Waiting &&
 		b.Clients == other.Clients
 }
-func (b *BaseValues) AddValues(value *BaseValues) *BaseValues {
+func (b *BaseValues) Add(value *BaseValues) *BaseValues {
 	b.Messages += value.Messages
 	b.Volume += value.Volume
 	b.Errors += value.Errors
 	b.Waiting += value.Waiting
-	b.Clients += value.Clients
+	for k, v := range value.ClientMap {
+		b.ClientMap[k] = v
+	}
+	b.Clients = int64(len(b.ClientMap))
+	if value.LastSeen > b.LastSeen {
+		b.LastSeen = value.LastSeen
+	}
 	return b
 }
 
-func (b *BaseValues) MessagesString() string {
-	return humanize.Comma(b.Messages)
-}
-func (b *BaseValues) VolumeString() string {
-	return humanize.BigBytes(big.NewInt(b.Volume))
+func (b *BaseValues) Merge(other *BaseValues) *BaseValues {
+	b.Messages += other.Messages
+	b.Volume += other.Volume
+	b.Errors += other.Errors
+	b.Waiting += other.Waiting
+	b.Clients = other.Clients
+	b.LastSeen = other.LastSeen
+	return b
 }
 
-func (b *BaseValues) ErrorsString() string {
-	return humanize.Comma(b.Errors)
-}
-func (b *BaseValues) WaitingString() string {
-	return humanize.Comma(b.Waiting)
-}
-func (b *BaseValues) ClientsString() string {
-	return humanize.Comma(b.Clients)
+func (b *BaseValues) CombineWIth(other *BaseValues) *BaseValues {
+	newBase := NewBaseValues()
+	newBase.LastSeen = b.LastSeen
+	newBase.Messages = b.Messages + other.Messages
+	newBase.Volume = b.Volume + other.Volume
+	newBase.Errors = b.Errors + other.Errors
+	newBase.Waiting = b.Waiting + other.Waiting
+	if other.LastSeen > b.LastSeen {
+		newBase.LastSeen = other.LastSeen
+	}
+	for k, v := range b.ClientMap {
+		newBase.ClientMap[k] = v
+	}
+	for k, v := range other.ClientMap {
+		newBase.ClientMap[k] = v
+	}
+	newBase.Clients = int64(len(newBase.ClientMap))
+	return newBase
 }

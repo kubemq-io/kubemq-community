@@ -135,6 +135,5 @@ func (s *Service) startAsBroker(ctx context.Context, appConfig *config.Config) e
 
 	s.isHealthy.Store(true)
 	s.isReady.Store(true)
-	go s.runReportWorker(ctx)
 	return nil
 }

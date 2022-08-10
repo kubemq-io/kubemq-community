@@ -104,7 +104,7 @@ func (q *Queue) Calc() {
 	}
 	q.Subscribers = len(q.clients)
 	for _, c := range q.clients {
-		q.Waiting += q.LastSequence - c.LastSequenceSent
+		q.Waiting += q.LastSequence - c.LastSequenceSent + c.Pending
 		if c.LastSequenceSent >= q.FirstSequence {
 			q.Delivered += c.LastSequenceSent - q.FirstSequence + 1
 		}

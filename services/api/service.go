@@ -17,12 +17,13 @@ const saveInterval = time.Second * 5
 
 type service struct {
 	sync.Mutex
-	appConfig       *config.Config
-	broker          *broker.Service
-	metricsExporter *metrics.Exporter
-	lastSnapshot    *api.Snapshot
-	db              *api.DB
-	logger          *logging.Logger
+	appConfig               *config.Config
+	broker                  *broker.Service
+	metricsExporter         *metrics.Exporter
+	lastSnapshot            *api.Snapshot
+	db                      *api.DB
+	logger                  *logging.Logger
+	lastLoadedEntitiesGroup *api.EntitiesGroup
 }
 
 func newService(appConfig *config.Config, broker *broker.Service, exp *metrics.Exporter) *service {
@@ -37,10 +38,15 @@ func newService(appConfig *config.Config, broker *broker.Service, exp *metrics.E
 
 func (s *service) init(ctx context.Context, logger *logging.Logger) error {
 	s.logger = logger
-	if err := s.db.Init(); err != nil {
+	if err := s.db.Init(s.appConfig.Store.StorePath); err != nil {
 		return fmt.Errorf("error initializing api db: %s", err.Error())
 	}
-
+	var err error
+	s.lastLoadedEntitiesGroup, err = s.db.GetLastEntities()
+	if err != nil {
+		s.logger.Errorf("error getting last entities data from local db: %s", err.Error())
+		s.lastLoadedEntitiesGroup = api.NewEntitiesGroup()
+	}
 	go s.run(ctx)
 	return nil
 }
@@ -54,7 +60,7 @@ func (s *service) run(ctx context.Context) {
 		for {
 			select {
 			case <-ticker.C:
-				s.saveSnapshot(ctx)
+				s.saveEntitiesGroup(ctx)
 			case <-ctx.Done():
 				ticker.Stop()
 				return
@@ -63,29 +69,24 @@ func (s *service) run(ctx context.Context) {
 	}()
 
 }
-
-func (s *service) saveSnapshot(ctx context.Context) {
-	ss, err := s.snapshot(ctx)
+func (s *service) saveEntitiesGroup(ctx context.Context) {
+	currentSnapshot, err := s.getCurrentSnapshot(ctx)
 	if err != nil {
 		s.logger.Errorf("error getting snapshot: %s", err.Error())
 		return
 	}
-	if err := s.db.SaveSnapshot(ss); err != nil {
-		s.logger.Errorf("error saving snapshot: %s", err.Error())
+	if err := s.db.SaveEntitiesGroup(currentSnapshot.Entities); err != nil {
+		s.logger.Errorf("error saving entities group: %s", err.Error())
 		return
 	}
-	//entities := ss.Entities.List()
-	//if len(entities) > 0 {
-	//	if err := s.db.AddEntities(entities); err != nil {
-	//		s.logger.Errorf("error saving entities snapshot: %s", err.Error())
-	//	} else {
-	//		s.logger.Infof("saved %d entities snapshot", len(entities))
-	//	}
-	//}
+	if err := s.db.SaveLastEntitiesGroup(currentSnapshot.Entities); err != nil {
+		s.logger.Errorf("error saving last entities group: %s", err.Error())
+		return
+	}
 
 }
 
-func (s *service) snapshot(ctx context.Context) (*api.Snapshot, error) {
+func (s *service) getCurrentSnapshot(ctx context.Context) (*api.Snapshot, error) {
 	s.Lock()
 	defer s.Unlock()
 
@@ -93,13 +94,10 @@ func (s *service) snapshot(ctx context.Context) (*api.Snapshot, error) {
 	if err != nil {
 		return nil, err
 	}
+	ss.Entities = s.lastLoadedEntitiesGroup.Clone().Merge(ss.Entities)
 	q, err := s.broker.GetQueues(ctx)
 	if err != nil {
 		return nil, err
-	}
-	group, ok := ss.Status.Entities["queues"]
-	if ok {
-		group.Out.Waiting = q.Waiting
 	}
 	for _, queue := range q.Queues {
 		en, ok := ss.Entities.GetEntity("queues", queue.Name)
@@ -108,71 +106,22 @@ func (s *service) snapshot(ctx context.Context) (*api.Snapshot, error) {
 		}
 	}
 	if s.lastSnapshot == nil {
-		ss.Status.System.SetCPUUtilization(0, 0)
+		ss.System.SetCPUUtilization(0, 0)
 	} else {
-		ss.Status.System.SetCPUUtilization(s.lastSnapshot.Status.System.Uptime, s.lastSnapshot.Status.System.TotalCPUSeconds)
+		ss.System.SetCPUUtilization(s.lastSnapshot.System.Uptime, s.lastSnapshot.System.TotalCPUSeconds)
 	}
-
 	s.lastSnapshot = ss
 	return ss, nil
 }
+
 func (s *service) getSnapshot(c echo.Context) error {
-	ctx, cancel := context.WithCancel(c.Request().Context())
-	defer cancel()
 	res := NewResponse(c)
-	ss, err := s.snapshot(ctx)
-	if err != nil {
-		return res.SetError(err).Send()
+	if s.lastSnapshot == nil {
+		_, err := s.getCurrentSnapshot(c.Request().Context())
+		if err != nil {
+			return res.SetError(err).Send()
+		}
 	}
-	return res.SetResponseBody(ss).Send()
-}
-func (s *service) getInfo(c echo.Context) error {
-
-	res := NewResponse(c)
-	info := api.NewInfo().
-		SetHost(s.appConfig.Host).
-		SetVersion(s.appConfig.GetVersion()).
-		SetIsHealthy(s.broker.IsHealthy()).
-		SetIsReady(s.broker.IsReady())
-
-	return res.SetResponseBody(info).Send()
-}
-func (s *service) getStatus(c echo.Context) error {
-	ctx, cancel := context.WithCancel(c.Request().Context())
-	defer cancel()
-	res := NewResponse(c)
-
-	ss, err := s.snapshot(ctx)
-	if err != nil {
-		return res.SetError(err).Send()
-	}
-	return res.SetResponseBody(ss.Status).Send()
-}
-func (s *service) getEntities(c echo.Context) error {
-	ctx, cancel := context.WithCancel(c.Request().Context())
-	defer cancel()
-	res := NewResponse(c)
-	ss, err := s.snapshot(ctx)
-	if err != nil {
-		return res.SetError(err).Send()
-	}
-	group := c.QueryParam("group")
-	channel := c.QueryParam("channel")
-
-	if group == "" {
-		return res.SetResponseBody(ss.Entities).Send()
-	}
-	grEntities, ok := ss.Entities.GetFamily(group)
-	if !ok {
-		return res.SetHttpCode(400).SetError(fmt.Errorf("no such group: %s", group)).Send()
-	}
-
-	if channel == "" {
-		return res.SetResponseBody(grEntities).Send()
-	}
-	chEntity, ok := grEntities[channel]
-	if !ok {
-		return res.SetHttpCode(400).SetError(fmt.Errorf("no such channel: %s in group: %s", channel, group)).Send()
-	}
-	return res.SetResponseBody(chEntity).Send()
+	groupDTO := api.NewGroupDTO(s.lastSnapshot.System, s.lastSnapshot.Entities)
+	return res.SetResponseBody(groupDTO).Send()
 }
