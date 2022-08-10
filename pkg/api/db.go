@@ -1,13 +1,11 @@
 package api
 
 import (
-	"bytes"
 	"fmt"
 	bolt "go.etcd.io/bbolt"
+	"os"
 	"time"
 )
-
-const defaultTTL = time.Hour * 24
 
 type DB struct {
 	db *bolt.DB
@@ -17,8 +15,14 @@ func NewDB() *DB {
 	return &DB{}
 }
 
-func (d *DB) Init() error {
-	db, err := bolt.Open("./store/kubemq-api.db", 0600, &bolt.Options{Timeout: 1 * time.Second})
+func (d *DB) Init(path string) error {
+	// check if path exists , if not create it
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		if err := os.MkdirAll(path, 0755); err != nil {
+			return err
+		}
+	}
+	db, err := bolt.Open(path+"/kubemq.db", 0600, &bolt.Options{Timeout: 1 * time.Second})
 	if err != nil {
 		return err
 	}
@@ -31,24 +35,7 @@ func (d *DB) Init() error {
 }
 func (d *DB) initBuckets() error {
 	return d.db.Update(func(tx *bolt.Tx) error {
-		_, err := tx.CreateBucketIfNotExists([]byte("snapshots"))
-		if err != nil {
-			return err
-		}
-
-		_, err = tx.CreateBucketIfNotExists([]byte("events_store"))
-		if err != nil {
-			return err
-		}
-		_, err = tx.CreateBucketIfNotExists([]byte("events"))
-		if err != nil {
-			return err
-		}
-		_, err = tx.CreateBucketIfNotExists([]byte("commands"))
-		if err != nil {
-			return err
-		}
-		_, err = tx.CreateBucketIfNotExists([]byte("queries"))
+		_, err := tx.CreateBucketIfNotExists([]byte("entities"))
 		if err != nil {
 			return err
 		}
@@ -58,66 +45,45 @@ func (d *DB) initBuckets() error {
 func (d *DB) Close() error {
 	return d.db.Close()
 }
-func (d *DB) SaveSnapshot(snapshot *Snapshot) error {
+
+func (d *DB) SaveEntitiesGroup(group *EntitiesGroup) error {
 	return d.db.Update(func(tx *bolt.Tx) error {
-		bucket := tx.Bucket([]byte("snapshots"))
-		if bucket == nil {
-			return fmt.Errorf("bucket snapshots not found")
-		}
-		bytes, err := snapshot.ToBinary()
+		b := tx.Bucket([]byte("entities"))
+		data, err := group.ToBinary()
 		if err != nil {
 			return err
 		}
-		return bucket.Put([]byte(time.Unix(snapshot.Time, 0).Format(time.RFC3339)), bytes)
+		return b.Put([]byte(group.Key()), data)
 	})
 }
-func (d *DB) AddEntities(entities []*Entity) error {
+func (d *DB) SaveLastEntitiesGroup(group *EntitiesGroup) error {
 	return d.db.Update(func(tx *bolt.Tx) error {
-		for _, entity := range entities {
-			bucket := tx.Bucket([]byte(entity.Type))
-			if bucket == nil {
-				return fmt.Errorf("bucket %s not found", entity.Type)
-			}
-			bytes, err := entity.ToBinary()
-			if err != nil {
-				return err
-			}
-			err = bucket.Put([]byte(entity.Key()), bytes)
-			if err != nil {
-				return err
-			}
-			val := bucket.Get([]byte(entity.Key()))
-			if val != nil {
-				entity, err := EntityFromBinary(val)
-				if err != nil {
-					fmt.Println(err)
-				} else {
-					fmt.Println(entity.String())
-				}
-			}
+		b := tx.Bucket([]byte("entities"))
+		data, err := group.ToBinary()
+		if err != nil {
+			return err
 		}
-		return nil
+		return b.Put([]byte("__last__"), data)
 	})
-
 }
 
-func (d *DB) GetEntities(bucket, prefix string, fromTime int64) ([]*Entity, error) {
-	var entities []*Entity
+func (d *DB) GetLastEntities() (*EntitiesGroup, error) {
+	var group *EntitiesGroup
 	err := d.db.View(func(tx *bolt.Tx) error {
-		cursor := tx.Bucket([]byte(bucket)).Cursor()
-		for k, v := cursor.Seek([]byte(prefix)); k != nil && bytes.HasPrefix(k, []byte(prefix)); k, v = cursor.Next() {
-			entity, err := ParseEntity(v)
-			if err != nil {
-				return err
-			}
-			if entity.Time >= fromTime {
-				entities = append(entities, entity)
-			}
+		bucket := tx.Bucket([]byte("entities"))
+		val := bucket.Get([]byte("__last__"))
+		if val == nil {
+			return fmt.Errorf("last entities not found")
+		}
+		var err error
+		group, err = EntitiesGroupFromBinary(val)
+		if err != nil {
+			return err
 		}
 		return nil
 	})
 	if err != nil {
 		return nil, err
 	}
-	return entities, nil
+	return group, nil
 }

@@ -102,15 +102,12 @@ func CreateApiServer(ctx context.Context, broker *broker.Service, appConfigs ...
 	apiGroup.GET("/snapshot", func(c echo.Context) error {
 		return s.apiService.getSnapshot(c)
 	})
-	apiGroup.GET("/info", func(c echo.Context) error {
-		return s.apiService.getInfo(c)
-	})
-	apiGroup.GET("/status", func(c echo.Context) error {
-		return s.apiService.getStatus(c)
-	})
-	apiGroup.GET("/entities", func(c echo.Context) error {
-		return s.apiService.getEntities(c)
-	})
+	//apiGroup.GET("/info", func(c echo.Context) error {
+	//	return s.apiService.getInfo(c)
+	//})
+	//apiGroup.GET("/entities", func(c echo.Context) error {
+	//	return s.apiService.getEntities(c)
+	//})
 	apiGroup.GET("/config", func(c echo.Context) error {
 		return c.JSONPretty(http.StatusOK, appConfig, "\t")
 	})
