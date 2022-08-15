@@ -7,7 +7,7 @@ import (
 
 type ChannelDTO struct {
 	Name              string         `json:"name"`
-	Family            string         `json:"family"`
+	Type              string         `json:"type"`
 	LastActivity      int64          `json:"last_activity"`
 	LastActivityHuman string         `json:"last_activity_human"`
 	IsActive          bool           `json:"is_active"`
@@ -18,10 +18,10 @@ type ChannelDTO struct {
 
 // create a new ChannelDTO from Entity
 
-func NewChannelDTO(family, name string, entity *Entity) *ChannelDTO {
+func NewChannelDTO(_type, name string, entity *Entity) *ChannelDTO {
 	return &ChannelDTO{
 		Name:              name,
-		Family:            family,
+		Type:              _type,
 		Total:             NewBaseValuesDTOFromBaseValues(entity.In.CombineWIth(entity.Out)),
 		Incoming:          NewBaseValuesDTOFromBaseValues(entity.In),
 		Outgoing:          NewBaseValuesDTOFromBaseValues(entity.Out),

@@ -1,7 +1,9 @@
 package metrics
 
 import (
+	"github.com/kubemq-io/kubemq-community/config"
 	"github.com/kubemq-io/kubemq-community/pkg/api"
+
 	"strconv"
 	"strings"
 )
@@ -17,6 +19,12 @@ func getSnapshot(mf []*Family) *api.Snapshot {
 
 func parseFamily(mf []*Family) (*api.System, []*Stats) {
 	si := api.NewSystem()
+	serverState := config.GetServerState()
+	if serverState != nil {
+		si.SetVersion(serverState.Version)
+	} else {
+		si.SetVersion("Unknown")
+	}
 	var list []*Stats
 
 	for _, family := range mf {
