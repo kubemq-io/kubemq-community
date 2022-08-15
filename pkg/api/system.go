@@ -14,6 +14,7 @@ func getHostname() string {
 
 type System struct {
 	Hostname                string  `json:"hostname"`
+	Version                 string  `json:"version"`
 	ProcessMemory           float64 `json:"process_memory"`
 	ProcessMemoryAllocation float64 `json:"process_memory_allocation"`
 	GoRoutines              int64   `json:"go_routines"`
@@ -32,7 +33,10 @@ func NewSystem() *System {
 		TotalCPUs: runtime.NumCPU(),
 	}
 }
-
+func (s *System) SetVersion(value string) *System {
+	s.Version = value
+	return s
+}
 func (s *System) SetProcessMemory(value float64) *System {
 	s.ProcessMemory = math.Round((value)*100) / 100
 	return s

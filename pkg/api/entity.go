@@ -136,9 +136,9 @@ func (e *Entity) String() string {
 func (e *Entity) Merge(other *Entity) *Entity {
 	if e.LastSeen < other.LastSeen {
 		e.LastSeen = other.LastSeen
-		e.In = e.In.Merge(other.In)
-		e.Out = e.Out.Merge(other.Out)
 	}
+	e.In = e.In.Merge(other.In)
+	e.Out = e.Out.Merge(other.Out)
 	return e
 }
 

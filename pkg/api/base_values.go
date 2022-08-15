@@ -85,8 +85,13 @@ func (b *BaseValues) Merge(other *BaseValues) *BaseValues {
 	b.Volume += other.Volume
 	b.Errors += other.Errors
 	b.Waiting += other.Waiting
-	b.Clients = other.Clients
-	b.LastSeen = other.LastSeen
+	for k, v := range other.ClientMap {
+		b.ClientMap[k] = v
+	}
+	b.Clients = int64(len(b.ClientMap))
+	if other.LastSeen > b.LastSeen {
+		b.LastSeen = other.LastSeen
+	}
 	return b
 }
 
