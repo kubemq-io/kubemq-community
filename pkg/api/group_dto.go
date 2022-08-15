@@ -101,7 +101,7 @@ func NewGroupDTO(system *System, entitiesGroup *EntitiesGroup) *GroupDTO {
 	}
 	group.Channels += int64(len(group.RequestReply.ChannelsList))
 	group.RequestReply.Name = "request_reply"
-	
+
 	group.Incoming = NewBaseValuesDTOFromBaseValues(group.inBaseValues)
 	group.Outgoing = NewBaseValuesDTOFromBaseValues(group.outBaseValues)
 	group.Total = NewBaseValuesDTOFromBaseValues(group.inBaseValues.CombineWIth(group.outBaseValues))

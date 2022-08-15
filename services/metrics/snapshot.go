@@ -78,11 +78,11 @@ func makeEntities(st []*Stats) *api.EntitiesGroup {
 		}
 		switch item.Kind() {
 		case "messages_count":
-			entity.SetValues(item.Side, "messages", item.Int64())
+			entity.SetValues(item.Side, "messages", int64(item.Float64()))
 		case "messages_volume":
 			entity.SetValues(item.Side, "volume", int64(item.Float64()))
 		case "errors_count":
-			entity.SetValues(item.Side, "errors", item.Int64())
+			entity.SetValues(item.Side, "errors", int64(item.Float64()))
 		case "last_seen":
 			entity.SetValues(item.Side, "last_seen", int64(item.Float64()))
 		}

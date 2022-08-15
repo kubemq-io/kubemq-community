@@ -35,7 +35,7 @@ func NewBaseValuesDTO() *BaseValuesDTO {
 func NewBaseValuesDTOFromBaseValues(base *BaseValues) *BaseValuesDTO {
 	return &BaseValuesDTO{
 		Messages:              base.Messages,
-		MessagesHumanized:     humanize.BigComma(big.NewInt(base.Messages)),
+		MessagesHumanized:     humanize.Comma(base.Messages),
 		Volume:                base.Volume,
 		VolumeHumanized:       humanize.BigBytes(big.NewInt(base.Volume)),
 		Errors:                base.Errors,
