@@ -21,20 +21,20 @@ type GroupDTO struct {
 	ActiveChannels    int64          `json:"activeChannels"`
 	Queues            *FamilyDTO     `json:"queues"`
 	Pubsub            *FamilyDTO     `json:"pubsub"`
-	RequestReply      *FamilyDTO     `json:"requestReply"`
+	CommandsQueries   *FamilyDTO     `json:"commandsQueries"`
 	inBaseValues      *BaseValues
 	outBaseValues     *BaseValues
 }
 
 func newGroupDTO(system *System) *GroupDTO {
 	return &GroupDTO{
-		HostsInfo:     []*HostInfoDTO{NewHostInfoDTO(system)},
-		StatsCards:    NewStatCardDTOs(),
-		Queues:        newFamilyDTO("queues"),
-		Pubsub:        newFamilyDTO("pubsub"),
-		RequestReply:  newFamilyDTO("request_reply"),
-		inBaseValues:  NewBaseValues(),
-		outBaseValues: NewBaseValues(),
+		HostsInfo:       []*HostInfoDTO{NewHostInfoDTO(system)},
+		StatsCards:      NewStatCardDTOs(),
+		Queues:          newFamilyDTO("queues"),
+		Pubsub:          newFamilyDTO("pubsub"),
+		CommandsQueries: newFamilyDTO("commandsQueries"),
+		inBaseValues:    NewBaseValues(),
+		outBaseValues:   NewBaseValues(),
 	}
 }
 func NewGroupDTO(system *System, entitiesGroup *EntitiesGroup) *GroupDTO {
@@ -55,52 +55,42 @@ func NewGroupDTO(system *System, entitiesGroup *EntitiesGroup) *GroupDTO {
 	eventsFamily, ok := entitiesGroup.GetFamily("events")
 	if ok {
 		group.Pubsub = NewFamilyDTO(eventsFamily)
-		group.inBaseValues.Add(group.Pubsub.inBaseValues)
-		group.outBaseValues.Add(group.Pubsub.outBaseValues)
-		group.ActiveChannels += group.Pubsub.ActiveChannels
-		group.Clients += group.Pubsub.Clients
-		if group.LastActivity < group.Pubsub.LastActivity {
-			group.LastActivity = group.Pubsub.LastActivity
-		}
+
 	}
 	eventsStoreFamily, ok := entitiesGroup.GetFamily("events_store")
 	if ok {
 		group.Pubsub.Add(NewFamilyDTO(eventsStoreFamily))
-		group.inBaseValues.Add(group.Pubsub.inBaseValues)
-		group.outBaseValues.Add(group.Pubsub.outBaseValues)
-		group.ActiveChannels += group.Pubsub.ActiveChannels
-		group.Clients += group.Pubsub.Clients
-		if group.LastActivity < group.Pubsub.LastActivity {
-			group.LastActivity = group.Pubsub.LastActivity
-		}
 	}
+	group.inBaseValues.Add(group.Pubsub.inBaseValues)
+	group.outBaseValues.Add(group.Pubsub.outBaseValues)
+	group.Clients += group.Pubsub.Clients
+	group.ActiveChannels += group.Pubsub.ActiveChannels
 	group.Channels += int64(len(group.Pubsub.ChannelsList))
+	if group.LastActivity < group.Pubsub.LastActivity {
+		group.LastActivity = group.Pubsub.LastActivity
+	}
 	group.Pubsub.Name = "pubsub"
+
 	commandsFamily, ok := entitiesGroup.GetFamily("commands")
 	if ok {
-		group.RequestReply = NewFamilyDTO(commandsFamily)
-		group.inBaseValues.Add(group.RequestReply.inBaseValues)
-		group.outBaseValues.Add(group.RequestReply.outBaseValues)
-		group.ActiveChannels += group.RequestReply.ActiveChannels
-		group.Clients += group.RequestReply.Clients
-		if group.LastActivity < group.RequestReply.LastActivity {
-			group.LastActivity = group.RequestReply.LastActivity
-		}
+		group.CommandsQueries = NewFamilyDTO(commandsFamily)
 	}
 
 	queriesFamily, ok := entitiesGroup.GetFamily("queries")
 	if ok {
-		group.RequestReply.Add(NewFamilyDTO(queriesFamily))
-		group.inBaseValues.Add(group.RequestReply.inBaseValues)
-		group.outBaseValues.Add(group.RequestReply.outBaseValues)
-		group.ActiveChannels += group.RequestReply.ActiveChannels
-		group.Clients += group.RequestReply.Clients
-		if group.LastActivity < group.RequestReply.LastActivity {
-			group.LastActivity = group.RequestReply.LastActivity
-		}
+		group.CommandsQueries.Add(NewFamilyDTO(queriesFamily))
+
 	}
-	group.Channels += int64(len(group.RequestReply.ChannelsList))
-	group.RequestReply.Name = "request_reply"
+	group.inBaseValues.Add(group.CommandsQueries.inBaseValues)
+	group.outBaseValues.Add(group.CommandsQueries.outBaseValues)
+	group.Clients += group.CommandsQueries.Clients
+	group.ActiveChannels += group.CommandsQueries.ActiveChannels
+	group.Channels += int64(len(group.CommandsQueries.ChannelsList))
+	if group.LastActivity < group.CommandsQueries.LastActivity {
+		group.LastActivity = group.CommandsQueries.LastActivity
+	}
+	group.Channels += int64(len(group.CommandsQueries.ChannelsList))
+	group.CommandsQueries.Name = "request_reply"
 
 	group.Incoming = NewBaseValuesDTOFromBaseValues(group.inBaseValues)
 	group.Outgoing = NewBaseValuesDTOFromBaseValues(group.outBaseValues)
@@ -118,26 +108,26 @@ func (g *GroupDTO) UpdateStatCards() *GroupDTO {
 		fmt.Sprintf("%d", g.Channels),
 		g.Queues,
 		g.Pubsub,
-		g.RequestReply,
+		g.CommandsQueries,
 	)
 	g.StatsCards.AddClients(
 		fmt.Sprintf("%d", g.Clients),
 		g.Queues,
 		g.Pubsub,
-		g.RequestReply,
+		g.CommandsQueries,
 	)
 	g.StatsCards.AddIncoming(
 		g.Incoming.MessagesHumanized,
 		g.Incoming.VolumeHumanized,
 		g.Queues,
 		g.Pubsub,
-		g.RequestReply)
+		g.CommandsQueries)
 
 	g.StatsCards.AddOutgoing(
 		g.Outgoing.MessagesHumanized,
 		g.Outgoing.VolumeHumanized,
 		g.Queues,
 		g.Pubsub,
-		g.RequestReply)
+		g.CommandsQueries)
 	return g
 }
