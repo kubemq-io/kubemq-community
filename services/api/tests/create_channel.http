@@ -1,0 +1,59 @@
+POST http://localhost:8080/api/create_channel
+Content-Type: application/json
+
+{
+    "type": "create_channel",
+    "data": {
+        "type": "queues",
+        "name": "orderer.example.com"
+    }
+}
+
+###
+
+POST http://localhost:8080/api/create_channel
+Content-Type: application/json
+
+{
+  "type": "create_channel",
+  "data": {
+    "type": "events",
+    "name": "orderer.example.com"
+  }
+}
+
+###
+POST http://localhost:8080/api/create_channel
+Content-Type: application/json
+
+{
+  "type": "create_channel",
+  "data": {
+    "type": "events_store",
+    "name": "orderer.example.com"
+  }
+}
+
+###
+POST http://localhost:8080/api/create_channel
+Content-Type: application/json
+
+{
+  "type": "create_channel",
+  "data": {
+    "type": "commands",
+    "name": "orderer.example.com"
+  }
+}
+
+###
+POST http://localhost:8080/api/create_channel
+Content-Type: application/json
+
+{
+  "type": "create_channel",
+  "data": {
+    "type": "queries",
+    "name": "orderer.example.com"
+  }
+}

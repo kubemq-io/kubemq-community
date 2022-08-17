@@ -102,6 +102,9 @@ func CreateApiServer(ctx context.Context, broker *broker.Service, appConfigs ...
 	apiGroup.GET("/snapshot", func(c echo.Context) error {
 		return s.apiService.getSnapshot(c)
 	})
+	apiGroup.POST("/create_channel", func(c echo.Context) error {
+		return s.apiService.handleActionCreateChannel(c)
+	})
 	//apiGroup.GET("/info", func(c echo.Context) error {
 	//	return s.apiService.getInfo(c)
 	//})
