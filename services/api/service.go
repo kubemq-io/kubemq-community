@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"github.com/kubemq-io/kubemq-community/config"
 	"github.com/kubemq-io/kubemq-community/pkg/api"
+	actions_pkg "github.com/kubemq-io/kubemq-community/pkg/api/actions"
 	"github.com/kubemq-io/kubemq-community/pkg/logging"
+	"github.com/kubemq-io/kubemq-community/services/api/actions"
 	"github.com/kubemq-io/kubemq-community/services/broker"
 	"github.com/kubemq-io/kubemq-community/services/metrics"
 	"github.com/labstack/echo/v4"
@@ -24,6 +26,7 @@ type service struct {
 	db                      *api.DB
 	logger                  *logging.Logger
 	lastLoadedEntitiesGroup *api.EntitiesGroup
+	actionClient            *actions.Client
 }
 
 func newService(appConfig *config.Config, broker *broker.Service, exp *metrics.Exporter) *service {
@@ -46,6 +49,11 @@ func (s *service) init(ctx context.Context, logger *logging.Logger) error {
 	if err != nil {
 		s.logger.Errorf("error getting last entities data from local db: %s", err.Error())
 		s.lastLoadedEntitiesGroup = api.NewEntitiesGroup()
+	}
+	s.actionClient = actions.NewClient()
+	err = s.actionClient.Init(ctx, s.appConfig.Grpc.Port)
+	if err != nil {
+		return fmt.Errorf("error initializing actions client: %s", err.Error())
 	}
 	go s.run(ctx)
 	return nil
@@ -124,4 +132,20 @@ func (s *service) getSnapshot(c echo.Context) error {
 	}
 	groupDTO := api.NewSnapshotDTO(s.lastSnapshot.System, s.lastSnapshot.Entities)
 	return res.SetResponseBody(groupDTO).Send()
+}
+
+func (s *service) handleActionCreateChannel(c echo.Context) error {
+	res := NewResponse(c)
+	req := actions_pkg.NewRequest()
+	if err := c.Bind(req); err != nil {
+		return res.SetError(err).Send()
+	}
+	actionRequest := actions_pkg.NewCreateChannelRequest()
+	if err := actionRequest.ParseRequest(req); err != nil {
+		return res.SetError(err).Send()
+	}
+	if err := s.actionClient.CreateChannel(c.Request().Context(), actionRequest); err != nil {
+		return res.SetError(err).Send()
+	}
+	return res.Send()
 }
