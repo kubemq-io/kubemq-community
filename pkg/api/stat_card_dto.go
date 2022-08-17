@@ -33,9 +33,9 @@ type StatCardDTO struct {
 	PrimaryItemValue                  string              `json:"primaryItemValue"`
 	SecondaryItemCaption              string              `json:"secondaryItemCaption,omitempty"`
 	SecondaryItemValue                string              `json:"secondaryItemValue,omitempty"`
-	Queues                            *StatCardSectionDTO `json:"queues"`
-	PubSub                            *StatCardSectionDTO `json:"pubsub"`
-	CommandsQueries                   *StatCardSectionDTO `json:"commandsQueries"`
+	Queues                            *StatCardSectionDTO `json:"queues,omitempty"`
+	PubSub                            *StatCardSectionDTO `json:"pubsub,omitempty"`
+	CommandsQueries                   *StatCardSectionDTO `json:"commandsQueries,omitempty"`
 	primaryItemValue                  int64
 	secondaryItemValue                int64
 	queuesPrimaryItemValue            int64
@@ -52,12 +52,10 @@ func NewStatCardDTO(primaryCaption, primaryValue, secondaryCaption, secondaryVal
 		PrimaryItemValue:     primaryValue,
 		SecondaryItemCaption: secondaryCaption,
 		SecondaryItemValue:   secondaryValue,
-		Queues:               NewStatCardSectionDTO(),
-		PubSub:               NewStatCardSectionDTO(),
-		CommandsQueries:      NewStatCardSectionDTO(),
 	}
 }
 func (s *StatCardDTO) AddQueuesFamily(primaryValue, secondaryValue int64) *StatCardDTO {
+	s.Queues = NewStatCardSectionDTO()
 	s.Queues.SetTitle("Queues")
 	s.primaryItemValue += primaryValue
 	s.secondaryItemValue += secondaryValue
@@ -66,6 +64,7 @@ func (s *StatCardDTO) AddQueuesFamily(primaryValue, secondaryValue int64) *StatC
 	return s
 }
 func (s *StatCardDTO) AddPubSunFamily(primaryValue, secondaryValue int64) *StatCardDTO {
+	s.PubSub = NewStatCardSectionDTO()
 	s.PubSub.SetTitle("PubSub")
 	s.primaryItemValue += primaryValue
 	s.secondaryItemValue += secondaryValue
@@ -75,6 +74,7 @@ func (s *StatCardDTO) AddPubSunFamily(primaryValue, secondaryValue int64) *StatC
 }
 
 func (s *StatCardDTO) AddCommandsQueriesFamily(primaryValue, secondaryValue int64) *StatCardDTO {
+	s.CommandsQueries = NewStatCardSectionDTO()
 	s.CommandsQueries.SetTitle("Commands & Queries")
 	s.primaryItemValue += primaryValue
 	s.secondaryItemValue += secondaryValue

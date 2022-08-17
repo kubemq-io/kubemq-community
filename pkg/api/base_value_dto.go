@@ -8,17 +8,17 @@ import (
 
 type BaseValuesDTO struct {
 	Messages              int64  `json:"messages"`
-	MessagesHumanized     string `json:"messages_humanized"`
+	MessagesHumanized     string `json:"messagesHumanized"`
 	Volume                int64  `json:"volume"`
-	VolumeHumanized       string `json:"volume_humanized"`
+	VolumeHumanized       string `json:"volumeHumanized"`
 	Errors                int64  `json:"errors"`
-	ErrorsHumanized       string `json:"errors_humanized"`
+	ErrorsHumanized       string `json:"errorsHumanized"`
 	Waiting               int64  `json:"waiting"`
-	WaitingHumanized      string `json:"waiting_humanized"`
+	WaitingHumanized      string `json:"waitingHumanized"`
 	Clients               int64  `json:"clients"`
-	ClientsHumanized      string `json:"clients_humanized"`
-	LastActivity          int64  `json:"last_activity"`
-	LastActivityHumanized string `json:"last_activity_humanized"`
+	ClientsHumanized      string `json:"clientsHumanized"`
+	LastActivity          int64  `json:"lastActivity"`
+	LastActivityHumanized string `json:"lastActivityHumanized"`
 	clientMap             map[string]string
 }
 

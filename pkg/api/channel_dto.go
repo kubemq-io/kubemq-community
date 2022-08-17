@@ -8,9 +8,8 @@ import (
 type ChannelDTO struct {
 	Name              string         `json:"name"`
 	Type              string         `json:"type"`
-	LastActivity      int64          `json:"last_activity"`
-	LastActivityHuman string         `json:"last_activity_human"`
-	IsActive          bool           `json:"is_active"`
+	LastActivity      int64          `json:"lastActivity"`
+	LastActivityHuman string         `json:"lastActivityHuman"`
 	Total             *BaseValuesDTO `json:"total"`
 	Incoming          *BaseValuesDTO `json:"incoming"`
 	Outgoing          *BaseValuesDTO `json:"outgoing"`
@@ -27,6 +26,5 @@ func NewChannelDTO(_type, name string, entity *Entity) *ChannelDTO {
 		Outgoing:          NewBaseValuesDTOFromBaseValues(entity.Out),
 		LastActivity:      entity.LastSeen,
 		LastActivityHuman: humanize.Time(time.UnixMilli(entity.LastSeen)),
-		IsActive:          entity.IsActive(),
 	}
 }

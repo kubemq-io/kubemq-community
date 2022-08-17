@@ -122,6 +122,6 @@ func (s *service) getSnapshot(c echo.Context) error {
 			return res.SetError(err).Send()
 		}
 	}
-	groupDTO := api.NewGroupDTO(s.lastSnapshot.System, s.lastSnapshot.Entities)
+	groupDTO := api.NewSnapshotDTO(s.lastSnapshot.System, s.lastSnapshot.Entities)
 	return res.SetResponseBody(groupDTO).Send()
 }

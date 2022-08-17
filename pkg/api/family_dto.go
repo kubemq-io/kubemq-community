@@ -7,20 +7,21 @@ import (
 )
 
 type FamilyDTO struct {
-	Name              string         `json:"name"`
-	LastActivity      int64          `json:"last_activity"`
-	LastActivityHuman string         `json:"last_activity_human"`
-	Total             *BaseValuesDTO `json:"total"`
-	Incoming          *BaseValuesDTO `json:"incoming"`
-	Outgoing          *BaseValuesDTO `json:"outgoing"`
-	ChannelsList      []*ChannelDTO  `json:"channels_list"`
-	Channels          int64          `json:"channels"`
-	ChannelsHuman     string         `json:"channels_human"`
-	Clients           int64          `json:"clients"`
-	ClientsHuman      string         `json:"clients_human"`
-	ActiveChannels    int64          `json:"active_channels"`
-	inBaseValues      *BaseValues
-	outBaseValues     *BaseValues
+	Name                string         `json:"name"`
+	LastActivity        int64          `json:"last_activity"`
+	LastActivityHuman   string         `json:"last_activity_human"`
+	Total               *BaseValuesDTO `json:"total"`
+	Incoming            *BaseValuesDTO `json:"incoming"`
+	Outgoing            *BaseValuesDTO `json:"outgoing"`
+	ChannelsList        []*ChannelDTO  `json:"channels_list"`
+	Channels            int64          `json:"channels"`
+	ChannelsHuman       string         `json:"channels_human"`
+	Clients             int64          `json:"clients"`
+	ClientsHuman        string         `json:"clients_human"`
+	ActiveChannels      int64          `json:"active_channels"`
+	ActiveChannelsHuman string         `json:"active_channels_human"`
+	inBaseValues        *BaseValues
+	outBaseValues       *BaseValues
 }
 
 func newFamilyDTO(name string) *FamilyDTO {
@@ -67,6 +68,7 @@ func NewFamilyDTO(family *EntitiesFamily) *FamilyDTO {
 	f.ChannelsHuman = humanize.Comma(f.Channels)
 	f.ClientsHuman = humanize.Comma(f.Clients)
 	f.LastActivityHuman = humanize.Time(time.UnixMilli(f.LastActivity))
+	f.ActiveChannelsHuman = humanize.Comma(f.ActiveChannels)
 	return f
 }
 
@@ -90,4 +92,5 @@ func (f *FamilyDTO) Add(family *FamilyDTO) {
 		f.LastActivity = family.LastActivity
 	}
 	f.LastActivityHuman = humanize.Time(time.UnixMilli(f.LastActivity))
+	f.ActiveChannelsHuman = humanize.Comma(f.ActiveChannels)
 }

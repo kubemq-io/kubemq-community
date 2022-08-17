@@ -365,6 +365,7 @@ func (s *Server) ReceiveQueueMessages(ctx context.Context, request *pb.ReceiveQu
 	var response *pb.ReceiveQueueMessagesResponse
 	var err error
 	response, err = s.services.Array.ReceiveQueueMessages(ctx, request)
+	metrics.ReportClient("queues", "receive", request.Channel, 1)
 	metrics.ReportReceiveQueueMessages(request, response)
 	if err != nil {
 		return nil, err
