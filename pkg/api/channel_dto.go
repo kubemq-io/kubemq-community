@@ -13,6 +13,7 @@ type ChannelDTO struct {
 	Total             *BaseValuesDTO `json:"total"`
 	Incoming          *BaseValuesDTO `json:"incoming"`
 	Outgoing          *BaseValuesDTO `json:"outgoing"`
+	IsActive          bool           `json:"isActive"`
 }
 
 // create a new ChannelDTO from Entity
@@ -26,5 +27,6 @@ func NewChannelDTO(_type, name string, entity *Entity) *ChannelDTO {
 		Outgoing:          NewBaseValuesDTOFromBaseValues(entity.Out),
 		LastActivity:      entity.LastSeen,
 		LastActivityHuman: humanize.Time(time.UnixMilli(entity.LastSeen)),
+		IsActive:          entity.IsActive(),
 	}
 }

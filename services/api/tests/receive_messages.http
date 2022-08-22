@@ -1,0 +1,13 @@
+POST http://localhost:8080/api/request
+Content-Type: application/json
+
+{
+    "type": "receive_queue_messages",
+    "data": {
+        "channel": "a",
+        "isPeek": false,
+        "count": 10
+    }
+}
+
+###

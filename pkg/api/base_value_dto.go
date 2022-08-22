@@ -19,6 +19,10 @@ type BaseValuesDTO struct {
 	ClientsHumanized      string `json:"clientsHumanized"`
 	LastActivity          int64  `json:"lastActivity"`
 	LastActivityHumanized string `json:"lastActivityHumanized"`
+	Expired               int64  `json:"expired"`
+	ExpiredHumanized      string `json:"expiredHumanized"`
+	Delayed               int64  `json:"delayed"`
+	DelayedHumanized      string `json:"delayedHumanized"`
 	clientMap             map[string]string
 }
 
@@ -46,6 +50,10 @@ func NewBaseValuesDTOFromBaseValues(base *BaseValues) *BaseValuesDTO {
 		ClientsHumanized:      humanize.BigComma(big.NewInt(base.Clients)),
 		LastActivity:          base.LastSeen,
 		LastActivityHumanized: humanize.Time(time.UnixMilli(base.LastSeen)),
+		Expired:               base.Expired,
+		ExpiredHumanized:      humanize.BigComma(big.NewInt(base.Expired)),
+		Delayed:               base.Delayed,
+		DelayedHumanized:      humanize.BigComma(big.NewInt(base.Delayed)),
 		clientMap:             base.ClientMap,
 	}
 }

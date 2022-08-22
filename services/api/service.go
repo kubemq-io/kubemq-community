@@ -134,18 +134,43 @@ func (s *service) getSnapshot(c echo.Context) error {
 	return res.SetResponseBody(groupDTO).Send()
 }
 
-func (s *service) handleActionCreateChannel(c echo.Context) error {
+func (s *service) handleRequests(c echo.Context) error {
 	res := NewResponse(c)
 	req := actions_pkg.NewRequest()
 	if err := c.Bind(req); err != nil {
 		return res.SetError(err).Send()
 	}
-	actionRequest := actions_pkg.NewCreateChannelRequest()
-	if err := actionRequest.ParseRequest(req); err != nil {
-		return res.SetError(err).Send()
+	switch req.Type {
+	case "create_channel":
+		actionRequest := actions_pkg.NewCreateChannelRequest()
+		if err := actionRequest.ParseRequest(req); err != nil {
+			return res.SetError(err).Send()
+		}
+		if err := s.actionClient.CreateChannel(c.Request().Context(), actionRequest); err != nil {
+			return res.SetError(err).Send()
+		}
+		return res.Send()
+	case "send_queue_message":
+		actionRequest := actions_pkg.NewSendQueueMessageRequest()
+		if err := actionRequest.ParseRequest(req); err != nil {
+			return res.SetError(err).Send()
+		}
+		if actionRes, err := s.actionClient.SendQueueMessage(c.Request().Context(), actionRequest); err != nil {
+			return res.SetError(err).Send()
+		} else {
+			return res.SetResponseBody(actionRes).Send()
+		}
+	case "receive_queue_messages":
+		actionRequest := actions_pkg.NewReceiveQueueMessagesRequest()
+		if err := actionRequest.ParseRequest(req); err != nil {
+			return res.SetError(err).Send()
+		}
+		if actionRes, err := s.actionClient.ReceiveQueueMessages(c.Request().Context(), actionRequest); err != nil {
+			return res.SetError(err).Send()
+		} else {
+			return res.SetResponseBody(actionRes).Send()
+		}
+	default:
+		return res.SetError(fmt.Errorf("unknown action type: %s", req.Type)).Send()
 	}
-	if err := s.actionClient.CreateChannel(c.Request().Context(), actionRequest); err != nil {
-		return res.SetError(err).Send()
-	}
-	return res.Send()
 }

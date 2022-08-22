@@ -83,6 +83,10 @@ func makeEntities(st []*Stats) *api.EntitiesGroup {
 			entity.SetValues(item.Side, "volume", int64(item.Float64()))
 		case "errors_count":
 			entity.SetValues(item.Side, "errors", int64(item.Float64()))
+		case "messages_expired":
+			entity.SetValues(item.Side, "expired", int64(item.Float64()))
+		case "messages_delayed":
+			entity.SetValues(item.Side, "delayed", int64(item.Float64()))
 		case "last_seen":
 			entity.SetValues(item.Side, "last_seen", int64(item.Float64()))
 		}

@@ -54,6 +54,10 @@ func (e *Entity) SetValues(side, kind string, value int64) *Entity {
 			e.In.Errors += value
 		case "waiting":
 			e.In.SetWaiting(value)
+		case "expired":
+			e.In.SetExpired(value)
+		case "delayed":
+			e.In.SetDelayed(value)
 		case "last_seen":
 			e.In.SetLastSeen(value)
 			if e.LastSeen < value {
@@ -70,6 +74,10 @@ func (e *Entity) SetValues(side, kind string, value int64) *Entity {
 			e.Out.Errors += value
 		case "waiting":
 			e.Out.SetWaiting(value)
+		case "expired":
+			e.Out.SetExpired(value)
+		case "delayed":
+			e.Out.SetDelayed(value)
 		case "last_seen":
 			e.Out.SetLastSeen(value)
 			if e.LastSeen < value {
@@ -88,17 +96,6 @@ func (e *Entity) SetClient(side, value string) *Entity {
 	return e
 }
 
-func (e *Entity) Diff(other *Entity) *Entity {
-	newEntity := NewEntity(e.Type, e.Name)
-	newEntity.Time = e.Time
-	newEntity.LastSeen = e.LastSeen
-	newEntity.In = e.In.Diff(other.In)
-	newEntity.Out = e.Out.Diff(other.Out)
-	return newEntity
-}
-func (e *Entity) IsEqual(other *Entity) bool {
-	return e.In.IsEqual(other.In) && e.Out.IsEqual(other.Out)
-}
 func (e *Entity) Key() string {
 	return fmt.Sprintf("%s-%s-%d", e.Type, e.Name, e.Time)
 }
