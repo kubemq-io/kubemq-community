@@ -1,0 +1,16 @@
+POST http://localhost:8080/api/request
+Content-Type: application/json
+
+{
+    "type": "send_queue_message",
+    "data": {
+        "messageId": "queues",
+        "channel": "a",
+        "clientId": "admin",
+        "body":  { "message": "Hello World" },
+       "metadata": "some metadata",
+        "tags": "key1:value1,key2:value2",
+    }
+}
+
+###

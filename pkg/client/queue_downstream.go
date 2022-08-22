@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/kubemq-io/broker/client/stan"
 	"github.com/kubemq-io/kubemq-community/pkg/uuid"
+	"github.com/kubemq-io/kubemq-community/services/metrics"
 	pb "github.com/kubemq-io/protobuf/go"
 	"go.uber.org/atomic"
 	"sync"
@@ -347,6 +348,7 @@ func (p *QueueDownstreamResponse) processRawMessages(policyFunc func(msg *pb.Que
 			}
 			if isExpired(msg) {
 				removeBadMessages = append(removeBadMessages, rawMsg)
+				metrics.ReportExpired(msg.Channel, 1)
 				continue
 			}
 			msg = addReceiveCount(msg)

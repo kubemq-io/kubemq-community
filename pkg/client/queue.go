@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/kubemq-io/kubemq-community/pkg/uuid"
+	"github.com/kubemq-io/kubemq-community/services/metrics"
 	"github.com/nats-io/nuid"
 	"sort"
 	"strings"
@@ -424,7 +425,9 @@ func (qc *QueueClient) startDelayedQueueProcessor(ctx context.Context) error {
 					// if time is not elapsed
 					if ts < time.Now().UnixNano() {
 						list = append(list, delayedMsg)
+
 						qc.delayedMessages.Delete(id)
+						metrics.ReportDelayed(delayedMsg.msg.Channel, -1)
 					}
 					return true
 				})
@@ -458,6 +461,7 @@ func (qc *QueueClient) startDelayedQueueProcessor(ctx context.Context) error {
 				id:        currentQueueMsg.MessageID,
 			}
 			qc.delayedMessages.Store(newDelayedMsg.id, newDelayedMsg)
+			metrics.ReportDelayed(currentQueueMsg.Channel, 1)
 		case <-qc.delayProcessorDone:
 			return nil
 		case <-ctx.Done():
@@ -797,6 +801,7 @@ func (qc *QueueClient) receiveQueueMessages(ctx context.Context, request *pb.Rec
 			}
 			if isExpired(msg) {
 				response.MessagesExpired++
+				metrics.ReportExpired(msg.Channel, 1)
 				qc.logger.Infow("queue message expired", "queue", msg.Channel, "message_id", msg.MessageID, "metadata", msg.Metadata, "message_sequence", msg.Attributes.Sequence, "message_timestamp", msg.Attributes.Timestamp)
 				_ = rawMsg.Ack()
 				continue
@@ -909,11 +914,13 @@ func (qc *QueueClient) receiveQueueMessagesForPeek(ctx context.Context, request 
 			}
 			if isExpired(msg) {
 				response.MessagesExpired++
+
 				qc.logger.Infow("queue message expired", "queue", msg.Channel, "message_id", msg.MessageID, "metadata", msg.Metadata, "message_sequence", msg.Attributes.Sequence, "message_timestamp", msg.Attributes.Timestamp)
 				err := rawMsg.Ack()
 				if err != nil {
 					qc.logger.Errorw("ack message failed with error", "seq", rawMsg.Sequence, "queue", request.Channel, "error", err.Error())
 				}
+				metrics.ReportExpired(msg.Channel, 1)
 				//unAckMessages = append(unAckMessages, rawMsg)
 				continue
 			} else {
@@ -1308,7 +1315,7 @@ func (qc *QueueClient) StreamQueueMessage(parentCtx context.Context, requests ch
 					qc.logger.Errorw("ack seq failed with error", "queue", activeQueueName, "seq", rawMsg.Sequence, "error", err.Error())
 				}
 				rawMsg = nil
-
+				metrics.ReportExpired(currentQueueMsg.Channel, 1)
 				messageInProcess.Store(false)
 				continue
 			}

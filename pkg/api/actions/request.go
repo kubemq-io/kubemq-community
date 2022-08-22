@@ -1,16 +1,14 @@
 package actions
 
-import "encoding/json"
-
 type Request struct {
-	Type string          `json:"type"`
-	Data json.RawMessage `json:"data"`
+	Type string                 `json:"type"`
+	Data map[string]interface{} `json:"data"`
 }
 
 func NewRequest() *Request {
 	return &Request{
 		Type: "",
-		Data: nil,
+		Data: make(map[string]interface{}),
 	}
 }
 
@@ -19,7 +17,7 @@ func (r *Request) SetType(type_ string) *Request {
 	return r
 }
 
-func (r *Request) SetData(data json.RawMessage) *Request {
+func (r *Request) SetData(data map[string]interface{}) *Request {
 	r.Data = data
 	return r
 }

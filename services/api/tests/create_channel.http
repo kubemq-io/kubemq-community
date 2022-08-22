@@ -1,4 +1,4 @@
-POST http://localhost:8080/api/create_channel
+POST http://localhost:8080/api/request
 Content-Type: application/json
 
 {
@@ -11,7 +11,7 @@ Content-Type: application/json
 
 ###
 
-POST http://localhost:8080/api/create_channel
+POST http://localhost:8080/api/request
 Content-Type: application/json
 
 {
@@ -23,7 +23,7 @@ Content-Type: application/json
 }
 
 ###
-POST http://localhost:8080/api/create_channel
+POST http://localhost:8080/api/request
 Content-Type: application/json
 
 {
@@ -35,7 +35,7 @@ Content-Type: application/json
 }
 
 ###
-POST http://localhost:8080/api/create_channel
+POST http://localhost:8080/api/request
 Content-Type: application/json
 
 {

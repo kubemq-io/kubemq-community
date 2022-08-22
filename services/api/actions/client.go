@@ -21,7 +21,10 @@ func (c *Client) Init(ctx context.Context, localPort int) error {
 	if err != nil {
 		return err
 	}
-	c.client, err = sdk.NewClient(ctx, sdk.WithAddress(host, localPort), sdk.WithTransportType(sdk.TransportTypeGRPC))
+	c.client, err = sdk.NewClient(ctx,
+		sdk.WithAddress(host, localPort),
+		sdk.WithTransportType(sdk.TransportTypeGRPC),
+		sdk.WithClientId("kubemq-admin-client"))
 	if err != nil {
 		return err
 	}
@@ -49,4 +52,20 @@ func (c *Client) CreateChannel(ctx context.Context, request *actions.CreateChann
 		return fmt.Errorf("unsupported channel type %s", request.Type)
 	}
 	return nil
+}
+
+func (c *Client) SendQueueMessage(ctx context.Context, request *actions.SendQueueMessageRequest) (*actions.SendQueueMessageResponse, error) {
+	res, err := sendQueueMessage(ctx, c.client, request)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
+func (c *Client) ReceiveQueueMessages(ctx context.Context, request *actions.ReceiveQueueMessagesRequest) ([]*actions.ReceiveQueueMessageResponse, error) {
+	res, err := receiveQueueMessages(ctx, c.client, request)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
 }
