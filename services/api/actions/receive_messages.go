@@ -27,7 +27,7 @@ func receiveQueueMessages(ctx context.Context, client *sdk.Client, actionReq *ac
 	for _, message := range res.Messages {
 		queueMessage := actions.NewReceiveQueueMessageResponse().
 			SetMessageId(message.MessageID).
-			SetBody(message.Body).
+			SetBody(detectAndConvertToAny(message.Body)).
 			SetMetadata(message.Metadata).
 			SetClientId(message.ClientID).
 			SetDelayedTo(message.Attributes.DelayedTo).

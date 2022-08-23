@@ -5,16 +5,17 @@ import (
 	"fmt"
 	"github.com/kubemq-io/kubemq-community/pkg/api/actions"
 	sdk "github.com/kubemq-io/kubemq-go"
-	"reflect"
 )
 
 func sendQueueMessage(ctx context.Context, client *sdk.Client, message *actions.SendQueueMessageRequest) (*actions.SendQueueMessageResponse, error) {
-	// print reflection of message body
-	fmt.Println(reflect.TypeOf(message.Body))
 
+	body, _, err := detectAndConvertToBytesArray(message.Body)
+	if err != nil {
+		return nil, err
+	}
 	res, err := client.QM().
 		SetChannel(message.Channel).
-		SetBody([]byte("somebody")).
+		SetBody(body).
 		SetId(message.MessageId).
 		SetMetadata(message.Metadata).
 		SetTags(message.TagsKeyValue()).

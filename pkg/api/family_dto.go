@@ -8,18 +8,19 @@ import (
 
 type FamilyDTO struct {
 	Name                string         `json:"name"`
-	LastActivity        int64          `json:"last_activity"`
-	LastActivityHuman   string         `json:"last_activity_human"`
+	LastActivity        int64          `json:"lastActivity"`
+	LastActivityHuman   string         `json:"lastActivityHuman"`
 	Total               *BaseValuesDTO `json:"total"`
 	Incoming            *BaseValuesDTO `json:"incoming"`
 	Outgoing            *BaseValuesDTO `json:"outgoing"`
-	ChannelsList        []*ChannelDTO  `json:"channels_list"`
+	ChannelsList        []*ChannelDTO  `json:"channelsList"`
 	Channels            int64          `json:"channels"`
-	ChannelsHuman       string         `json:"channels_human"`
+	ChannelsHuman       string         `json:"channelsHuman"`
 	Clients             int64          `json:"clients"`
-	ClientsHuman        string         `json:"clients_human"`
-	ActiveChannels      int64          `json:"active_channels"`
-	ActiveChannelsHuman string         `json:"active_channels_human"`
+	ClientsHuman        string         `json:"clientsHuman"`
+	ActiveChannels      int64          `json:"activeChannels"`
+	ActiveChannelsHuman string         `json:"activeChannelsHuman"`
+	IsActive            bool           `json:"isActive"`
 	inBaseValues        *BaseValues
 	outBaseValues       *BaseValues
 }
@@ -38,13 +39,13 @@ func newFamilyDTO(name string) *FamilyDTO {
 		Clients:           0,
 		ClientsHuman:      humanize.Comma(0),
 		ActiveChannels:    0,
+		IsActive:          false,
 		inBaseValues:      NewBaseValues(),
 		outBaseValues:     NewBaseValues(),
 	}
 }
 func NewFamilyDTO(family *EntitiesFamily) *FamilyDTO {
 	f := newFamilyDTO(family.Name)
-
 	for _, channel := range family.Entities {
 		channelDTO := NewChannelDTO(family.Name, channel.Name, channel)
 		f.inBaseValues.Add(channel.In)
@@ -69,6 +70,7 @@ func NewFamilyDTO(family *EntitiesFamily) *FamilyDTO {
 	f.ClientsHuman = humanize.Comma(f.Clients)
 	f.LastActivityHuman = humanize.Time(time.UnixMilli(f.LastActivity))
 	f.ActiveChannelsHuman = humanize.Comma(f.ActiveChannels)
+	f.IsActive = time.Now().UTC().UnixMilli()-f.LastActivity < 300000
 	return f
 }
 
@@ -93,4 +95,5 @@ func (f *FamilyDTO) Add(family *FamilyDTO) {
 	}
 	f.LastActivityHuman = humanize.Time(time.UnixMilli(f.LastActivity))
 	f.ActiveChannelsHuman = humanize.Comma(f.ActiveChannels)
+	f.IsActive = time.Now().UTC().UnixMilli()-f.LastActivity < 300000
 }

@@ -170,6 +170,16 @@ func (s *service) handleRequests(c echo.Context) error {
 		} else {
 			return res.SetResponseBody(actionRes).Send()
 		}
+	case "purge_queue_channel":
+		actionRequest := actions_pkg.NewPurgeQueueChannelRequest()
+		if err := actionRequest.ParseRequest(req); err != nil {
+			return res.SetError(err).Send()
+		}
+		if actionRes, err := s.actionClient.PurgeQueueChannnel(c.Request().Context(), actionRequest); err != nil {
+			return res.SetError(err).Send()
+		} else {
+			return res.SetResponseBody(actionRes).Send()
+		}
 	default:
 		return res.SetError(fmt.Errorf("unknown action type: %s", req.Type)).Send()
 	}

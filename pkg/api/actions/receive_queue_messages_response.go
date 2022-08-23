@@ -37,8 +37,8 @@ func (m *ReceiveQueueMessageResponse) SetMetadata(metadata string) *ReceiveQueue
 	return m
 }
 
-func (m *ReceiveQueueMessageResponse) SetBody(body []byte) *ReceiveQueueMessageResponse {
-	m.Body = string(body)
+func (m *ReceiveQueueMessageResponse) SetBody(body any) *ReceiveQueueMessageResponse {
+	m.Body = body
 	return m
 }
 

@@ -69,3 +69,10 @@ func (c *Client) ReceiveQueueMessages(ctx context.Context, request *actions.Rece
 	}
 	return res, nil
 }
+func (c *Client) PurgeQueueChannnel(ctx context.Context, request *actions.PurgeQueueChannelRequest) (*actions.PurgeQueueChannelResponse, error) {
+	res, err := purgeQueueChannel(ctx, c.client, request)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}

@@ -5,7 +5,7 @@ Content-Type: application/json
     "type": "create_channel",
     "data": {
         "type": "queues",
-        "name": "orderer.example.com"
+        "name": "orderer.example.comsss"
     }
 }
 

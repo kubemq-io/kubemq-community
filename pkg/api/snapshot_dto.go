@@ -8,27 +8,24 @@ import (
 )
 
 type SnapshotDTO struct {
-	HostsInfo            []*HostInfoDTO   `json:"hostsInfo"`
-	StatsCards           *StatCardDTOs    `json:"statsCards"`
-	TopChannels          []*TopChannelDTO `json:"topChannels"`
-	QueuesGroup          *GroupDTO        `json:"queuesGroup"`
-	PubsubGroup          *GroupDTO        `json:"pubsubGroup"`
-	CommandsQueriesGroup *GroupDTO        `json:"commandsQueriesGroup"`
-	LastActivity         int64            `json:"lastActivity"`
-	LastActivityHuman    string           `json:"lastActivityHuman"`
-	Total                *BaseValuesDTO   `json:"total"`
-	Incoming             *BaseValuesDTO   `json:"incoming"`
-	Outgoing             *BaseValuesDTO   `json:"outgoing"`
-	Channels             int64            `json:"channels"`
-	ChannelsHuman        string           `json:"channelsHuman"`
-	Clients              int64            `json:"clients"`
-	ClientsHuman         string           `json:"clientsHuman"`
-	ActiveChannels       int64            `json:"activeChannels"`
-	Queues               *FamilyDTO       `json:"queues"`
-	Pubsub               *FamilyDTO       `json:"pubsub"`
-	CommandsQueries      *FamilyDTO       `json:"commandsQueries"`
-	inBaseValues         *BaseValues
-	outBaseValues        *BaseValues
+	HostsInfo         []*HostInfoDTO   `json:"hostsInfo"`
+	StatsCards        *StatCardDTOs    `json:"statsCards"`
+	TopChannels       []*TopChannelDTO `json:"topChannels"`
+	LastActivity      int64            `json:"lastActivity"`
+	LastActivityHuman string           `json:"lastActivityHuman"`
+	Total             *BaseValuesDTO   `json:"total"`
+	Incoming          *BaseValuesDTO   `json:"incoming"`
+	Outgoing          *BaseValuesDTO   `json:"outgoing"`
+	Channels          int64            `json:"channels"`
+	ChannelsHuman     string           `json:"channelsHuman"`
+	Clients           int64            `json:"clients"`
+	ClientsHuman      string           `json:"clientsHuman"`
+	ActiveChannels    int64            `json:"activeChannels"`
+	Queues            *FamilyDTO       `json:"queues"`
+	Pubsub            *FamilyDTO       `json:"pubsub"`
+	CommandsQueries   *FamilyDTO       `json:"commandsQueries"`
+	inBaseValues      *BaseValues
+	outBaseValues     *BaseValues
 }
 
 func newSnapshot(system *System) *SnapshotDTO {
@@ -105,7 +102,6 @@ func NewSnapshotDTO(system *System, entitiesGroup *EntitiesGroup) *SnapshotDTO {
 	group.ClientsHuman = humanize.Comma(group.Clients)
 	group.UpdateStatCards()
 	group.CreateTopChannels()
-	group.UpdateGroupsInfo()
 	return group
 }
 
@@ -156,11 +152,3 @@ func (g *SnapshotDTO) CreateTopChannels() *SnapshotDTO {
 	}
 	return g
 }
-
-func (g *SnapshotDTO) UpdateGroupsInfo() *SnapshotDTO {
-	g.QueuesGroup = NewGroupDTO(g.Queues)
-	g.PubsubGroup = NewGroupDTO(g.Pubsub)
-	g.CommandsQueriesGroup = NewGroupDTO(g.CommandsQueries)
-	return g
-}
-

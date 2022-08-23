@@ -1,7 +1,6 @@
 package actions
 
 import (
-	"encoding/json"
 	"fmt"
 )
 
@@ -24,7 +23,7 @@ func (r *ReceiveQueueMessagesRequest) ParseRequest(req *Request) error {
 		return fmt.Errorf("receive queue messages request data not found")
 	}
 
-	err := json.Unmarshal(req.Data, r)
+	err := transformJsonMapToStruct(req.Data, r)
 	if err != nil {
 		return fmt.Errorf("error unmarshalling receive queue messages request data: %s", err.Error())
 	}
