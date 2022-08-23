@@ -5,11 +5,11 @@ Content-Type: application/json
     "type": "send_queue_message",
     "data": {
         "messageId": "queues",
-        "channel": "a",
+        "channel": "q",
         "clientId": "admin",
-        "body":  { "message": "Hello World" },
+        "body":  "asdasd",
        "metadata": "some metadata",
-        "tags": "key1:value1,key2:value2",
+        "tags": "key1:value1,key2:value2"
     }
 }
 

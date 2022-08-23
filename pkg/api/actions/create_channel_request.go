@@ -1,7 +1,6 @@
 package actions
 
 import (
-	"encoding/json"
 	"fmt"
 )
 
@@ -26,7 +25,7 @@ func (r *CreateChannelRequest) ParseRequest(req *Request) error {
 		return fmt.Errorf("create channel request data not found")
 	}
 
-	err := json.Unmarshal(req.Data, r)
+	err := transformJsonMapToStruct(req.Data, r)
 	if err != nil {
 		return fmt.Errorf("error unmarshalling create channel request data: %s", err.Error())
 	}
@@ -43,5 +42,3 @@ func (r *CreateChannelRequest) Validate() error {
 	}
 	return nil
 }
-
-

@@ -4,7 +4,7 @@ Content-Type: application/json
 {
     "type": "receive_queue_messages",
     "data": {
-        "channel": "a",
+        "channel": "q",
         "isPeek": false,
         "count": 10
     }

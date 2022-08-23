@@ -1,7 +1,6 @@
 package actions
 
 import (
-	"encoding/json"
 	"fmt"
 	"strings"
 )
@@ -39,7 +38,7 @@ func (r *SendQueueMessageRequest) ParseRequest(req *Request) error {
 		return fmt.Errorf("send queue message request data not found")
 	}
 
-	err := json.Unmarshal(req.Data, r)
+	err := transformJsonMapToStruct(req.Data, r)
 	if err != nil {
 		return fmt.Errorf("error unmarshalling send queue message request data: %s", err.Error())
 	}
