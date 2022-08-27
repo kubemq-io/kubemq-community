@@ -62,6 +62,13 @@ func (c *Client) SendQueueMessage(ctx context.Context, request *actions.SendQueu
 	return res, nil
 }
 
+func (c *Client) SendPubSubMessage(ctx context.Context, request *actions.SendPubSubMessageRequest) error {
+	err := sendPubSubMessage(ctx, c.client, request)
+	if err != nil {
+		return err
+	}
+	return nil
+}
 func (c *Client) ReceiveQueueMessages(ctx context.Context, request *actions.ReceiveQueueMessagesRequest) ([]*actions.ReceiveQueueMessageResponse, error) {
 	res, err := receiveQueueMessages(ctx, c.client, request)
 	if err != nil {
@@ -69,10 +76,25 @@ func (c *Client) ReceiveQueueMessages(ctx context.Context, request *actions.Rece
 	}
 	return res, nil
 }
-func (c *Client) PurgeQueueChannnel(ctx context.Context, request *actions.PurgeQueueChannelRequest) (*actions.PurgeQueueChannelResponse, error) {
+func (c *Client) PurgeQueueChannel(ctx context.Context, request *actions.PurgeQueueChannelRequest) (*actions.PurgeQueueChannelResponse, error) {
 	res, err := purgeQueueChannel(ctx, c.client, request)
 	if err != nil {
 		return nil, err
 	}
 	return res, nil
+}
+
+func (c *Client) SubscribeToEvents(ctx context.Context, channel, group string, messagesChan chan *actions.SubscribePubSubMessage, errChan chan error) error {
+	err := subscribeToEvents(ctx, c.client, channel, group, messagesChan, errChan)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+func (c *Client) SubscribeToEventsStore(ctx context.Context, channel, group, clientId, subType, subValue string, messagesChan chan *actions.SubscribePubSubMessage, errChan chan error) error {
+	err := subscribeToEventsStore(ctx, c.client, channel, group, clientId, subType, subValue, messagesChan, errChan)
+	if err != nil {
+		return err
+	}
+	return nil
 }

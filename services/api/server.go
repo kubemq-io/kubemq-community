@@ -108,7 +108,17 @@ func CreateApiServer(ctx context.Context, broker *broker.Service, appConfigs ...
 	apiGroup.GET("/config", func(c echo.Context) error {
 		return c.JSONPretty(http.StatusOK, appConfig, "\t")
 	})
-
+	apiGroup.GET("/monitor", func(c echo.Context) error {
+		c.Set("appconf", appConfig)
+		_ = monitor.MonitorHandlerFunc(s.context, c)
+		return nil
+	})
+	apiGroup.GET("/subscribe/pubsub", func(c echo.Context) error {
+		return s.apiService.handlerSubscribeToPubSub(c)
+	})
+	apiGroup.GET("/connection", func(c echo.Context) error {
+		return s.apiService.handlerConnectionStatus(c)
+	})
 	e.Server.ReadTimeout = time.Duration(180) * time.Second
 	e.Server.WriteTimeout = time.Duration(180) * time.Second
 	s.echoWebServer = e

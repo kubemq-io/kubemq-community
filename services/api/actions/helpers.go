@@ -29,5 +29,11 @@ func detectAndConvertToAny(data []byte) any {
 	if err == nil {
 		return jsonObject
 	}
+	jsonArray := make([]map[string]interface{}, 0)
+	err = json.Unmarshal(data, &jsonArray)
+	if err == nil {
+
+		return jsonArray
+	}
 	return string(data)
 }

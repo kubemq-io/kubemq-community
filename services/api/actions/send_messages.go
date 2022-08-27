@@ -39,3 +39,41 @@ func sendQueueMessage(ctx context.Context, client *sdk.Client, message *actions.
 		SetDelayedTo(res.DelayedTo), nil
 
 }
+
+func sendPubSubMessage(ctx context.Context, client *sdk.Client, message *actions.SendPubSubMessageRequest) error {
+
+	body, _, err := detectAndConvertToBytesArray(message.Body)
+	if err != nil {
+		return err
+	}
+
+	if message.IsEvents {
+		err := client.E().
+			SetChannel(message.Channel).
+			SetBody(body).
+			SetId(message.MessageId).
+			SetMetadata(message.Metadata).
+			SetTags(message.TagsKeyValue()).
+			Send(ctx)
+		if err != nil {
+			return err
+		}
+	} else {
+		res, err := client.ES().
+			SetChannel(message.Channel).
+			SetBody(body).
+			SetId(message.MessageId).
+			SetMetadata(message.Metadata).
+			SetTags(message.TagsKeyValue()).
+			Send(ctx)
+		if err != nil {
+			return err
+		}
+		if res.Err != nil {
+			return fmt.Errorf("error sending pubsub message on channel: %s , error: %s", message.Channel, res.Err.Error())
+		}
+
+	}
+	return nil
+
+}
