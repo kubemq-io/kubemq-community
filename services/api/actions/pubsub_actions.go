@@ -10,6 +10,63 @@ import (
 	"time"
 )
 
+func createPubSubChannel(ctx context.Context, client *sdk.Client, name string, isStore bool) error {
+	newCtx, _ := context.WithTimeout(ctx, 1*time.Second)
+	errChan := make(chan error, 1)
+	if isStore {
+		_, err := client.SubscribeToEventsStore(newCtx, name, "", errChan, sdk.StartFromNewEvents())
+		if err != nil {
+			return err
+		}
+
+	} else {
+		_, err := client.SubscribeToEvents(newCtx, name, "", errChan)
+		if err != nil {
+			return err
+		}
+	}
+	time.Sleep(1 * time.Second)
+	return nil
+}
+
+func sendPubSubMessage(ctx context.Context, client *sdk.Client, message *actions.SendPubSubMessageRequest) error {
+
+	body, _, err := detectAndConvertToBytesArray(message.Body)
+	if err != nil {
+		return err
+	}
+
+	if message.IsEvents {
+		err := client.E().
+			SetChannel(message.Channel).
+			SetBody(body).
+			SetId(message.MessageId).
+			SetMetadata(message.Metadata).
+			SetTags(message.TagsKeyValue()).
+			Send(ctx)
+		if err != nil {
+			return err
+		}
+	} else {
+		res, err := client.ES().
+			SetChannel(message.Channel).
+			SetBody(body).
+			SetId(message.MessageId).
+			SetMetadata(message.Metadata).
+			SetTags(message.TagsKeyValue()).
+			Send(ctx)
+		if err != nil {
+			return err
+		}
+		if res.Err != nil {
+			return fmt.Errorf("error sending pubsub message on channel: %s , error: %s", message.Channel, res.Err.Error())
+		}
+
+	}
+	return nil
+
+}
+
 func subscribeToEvents(ctx context.Context, client *sdk.Client, channel, group string, messagesCh chan *actions.SubscribePubSubMessage, errChan chan error) error {
 	eventsChan, err := client.SubscribeToEvents(ctx, channel, group, errChan)
 	if err != nil {

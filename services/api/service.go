@@ -337,3 +337,74 @@ drain:
 
 	return nil
 }
+
+func (s *service) handlerStreamQueueMessages(c echo.Context) error {
+	ctx, cancel := context.WithCancel(c.Request().Context())
+	defer cancel()
+
+	conn, err := upgrader.Upgrade(c.Response(), c.Request(), nil)
+	if err != nil {
+		s.logger.Errorf("error upgrading connection: %s", err.Error())
+		return fmt.Errorf("error upgrading connection: %s", err.Error())
+	}
+	defer func() {
+		fmt.Println("closing connection")
+		_ = conn.Close()
+	}()
+	errCh := make(chan error, 10)
+	requests := make(chan *actions_pkg.StreamQueueMessagesRequest, 1)
+	responses := make(chan *actions_pkg.StreamQueueMessagesResponse, 1)
+	go s.actionClient.StreamQueueMessages(ctx, requests, responses)
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+			}
+			_, data, err := conn.ReadMessage()
+			if err != nil {
+				errCh <- err
+				return
+			}
+			fmt.Println(string(data))
+			request := actions_pkg.NewStreamQueueMessagesRequest()
+			if err := request.ParseRequest(data); err != nil {
+				s.logger.Errorf("error parsing request: %s", err.Error())
+				return
+			}
+			requests <- request
+		}
+	}()
+
+	for {
+		select {
+		case <-ctx.Done():
+			goto drain
+
+		case response := <-responses:
+			fmt.Println(response.Marshal())
+			errOnSend := conn.WriteJSON(response)
+			if err != nil {
+				s.logger.Debugf("error on writing to web socket, error: %s", errOnSend.Error())
+				goto drain
+			}
+		case err := <-errCh:
+			var closeErr error
+			if err != nil {
+				closeErr = fmt.Errorf("connection closed, reason: %s", err.Error())
+			} else {
+				goto drain
+			}
+			s.logger.Error(closeErr)
+			errOnSend := conn.WriteMessage(1, []byte(closeErr.Error()))
+			if errOnSend != nil {
+				s.logger.Debugf("error on writing to web socket, error: %s", errOnSend.Error())
+			}
+			goto drain
+		}
+
+	}
+drain:
+	return nil
+}
