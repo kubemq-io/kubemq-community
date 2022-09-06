@@ -103,12 +103,21 @@ func (q *Queue) Calc() {
 		return
 	}
 	q.Subscribers = len(q.clients)
+	maxSequenceSent := int64(0)
+	pendingCount := int64(0)
+
 	for _, c := range q.clients {
-		q.Waiting += q.LastSequence - c.LastSequenceSent + c.Pending
+		if c.LastSequenceSent <= q.LastSequence {
+			pendingCount += c.Pending
+		}
+		if c.LastSequenceSent > maxSequenceSent {
+			maxSequenceSent = c.LastSequenceSent
+		}
 		if c.LastSequenceSent >= q.FirstSequence {
 			q.Delivered += c.LastSequenceSent - q.FirstSequence + 1
 		}
 	}
+	q.Waiting = pendingCount + q.LastSequence - maxSequenceSent
 }
 
 type Client struct {

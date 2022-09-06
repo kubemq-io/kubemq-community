@@ -5,11 +5,13 @@ import (
 	"fmt"
 	"github.com/kubemq-io/kubemq-community/pkg/api/actions"
 	"os"
+
+	sdk "github.com/kubemq-io/kubemq-go"
 )
-import sdk "github.com/kubemq-io/kubemq-go"
 
 type Client struct {
-	client *sdk.Client
+	client       *sdk.Client
+	streamClient *sdk.QueuesClient
 }
 
 func NewClient() *Client {
@@ -22,6 +24,13 @@ func (c *Client) Init(ctx context.Context, localPort int) error {
 		return err
 	}
 	c.client, err = sdk.NewClient(ctx,
+		sdk.WithAddress(host, localPort),
+		sdk.WithTransportType(sdk.TransportTypeGRPC),
+		sdk.WithClientId("kubemq-admin-client"))
+	if err != nil {
+		return err
+	}
+	c.streamClient, err = sdk.NewQueuesStreamClient(ctx,
 		sdk.WithAddress(host, localPort),
 		sdk.WithTransportType(sdk.TransportTypeGRPC),
 		sdk.WithClientId("kubemq-admin-client"))
@@ -97,4 +106,8 @@ func (c *Client) SubscribeToEventsStore(ctx context.Context, channel, group, cli
 		return err
 	}
 	return nil
+}
+
+func (c *Client) StreamQueueMessages(ctx context.Context, requests chan *actions.StreamQueueMessagesRequest, responses chan *actions.StreamQueueMessagesResponse) {
+	streamQueueMessages(ctx, c.streamClient, requests, responses)
 }
