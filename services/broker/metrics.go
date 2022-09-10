@@ -59,14 +59,16 @@ func (ch *channels) toQueues(chType string) *Queues {
 			}
 			if q.FirstSequence <= q.LastSequence {
 				for _, sub := range item.Subscriptions {
-					c := &Client{
-						ClientId:         sub.ClientID,
-						Active:           !sub.IsOffline,
-						LastSequenceSent: sub.LastSent,
-						IsStalled:        sub.IsStalled,
-						Pending:          sub.PendingCount,
+					if sub.QueueName != "" {
+						c := &Client{
+							ClientId:         sub.ClientID,
+							Active:           !sub.IsOffline,
+							LastSequenceSent: sub.LastSent,
+							IsStalled:        sub.IsStalled,
+							Pending:          sub.PendingCount,
+						}
+						q.clients = append(q.clients, c)
 					}
-					q.clients = append(q.clients, c)
 				}
 				q.Calc()
 				queues.Sent += q.Sent

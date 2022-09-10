@@ -81,7 +81,7 @@ func (s *Service) Close() {
 
 func (s *Service) GetQueues(ctx context.Context) (*Queues, error) {
 	ch := &channels{}
-	fmt.Println(fmt.Sprintf("http://localhost:%d/streaming/channelsz?limit=100000&subs=1", s.appConfig.Broker.MonitoringPort))
+	//fmt.Println(fmt.Sprintf("http://localhost:%d/streaming/channelsz?limit=100000&subs=1", s.appConfig.Broker.MonitoringPort))
 	err := http.Get(ctx, fmt.Sprintf("http://localhost:%d/streaming/channelsz?limit=100000&subs=1", s.appConfig.Broker.MonitoringPort), ch)
 	if err != nil {
 		return nil, err

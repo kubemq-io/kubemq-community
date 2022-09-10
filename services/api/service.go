@@ -123,6 +123,15 @@ func (s *service) getCurrentSnapshot(ctx context.Context) (*api.Snapshot, error)
 		return nil, err
 	}
 	ss.Entities = s.lastLoadedEntitiesGroup.Clone().Merge(ss.Entities)
+
+	// clean queue entities waiting messages count
+	queueGroup, ok := ss.Entities.Families["queues"]
+	if ok {
+		for _, entity := range queueGroup.Entities {
+			entity.Out.Waiting = 0
+		}
+	}
+
 	q, err := s.broker.GetQueues(ctx)
 	if err != nil {
 		return nil, err
