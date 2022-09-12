@@ -2,9 +2,7 @@ package monitor
 
 import (
 	"context"
-	"github.com/kubemq-io/kubemq-community/pkg/api/actions"
 	"github.com/kubemq-io/kubemq-community/pkg/entities"
-	pb "github.com/kubemq-io/protobuf/go"
 	"strconv"
 
 	"bytes"
@@ -151,19 +149,13 @@ func MonitorHandlerFunc(ctx context.Context, c echo.Context) error {
 		case tr := <-transportCh:
 			if tr.Error == nil {
 				if tr.Kind == "queue" {
-					queueMessage, err := transformToReceiveQueueMessageString(tr)
-					if err != nil {
-						logger.Error(err)
-						continue
-					} else {
-						txChan <- queueMessage
-					}
-				} else {
-					txChan <- tr.String()
+					txChan <- NewTransportQueueMessageDto(tr).ToJson()
 				}
-
+			} else {
+				txChan <- tr.String()
 			}
 			tr.Finish()
+
 		case <-c.Request().Context().Done():
 			logger.Debugw("wab socket session ended", "channel", monitorRequest.Channel, "kind", monitorRequest.Kind, "max_size", monitorRequest.MaxBodySize)
 			cancel()
@@ -194,62 +186,3 @@ func paramsToMonitorRequest(c echo.Context) (*MonitorRequest, error) {
 	mr.MaxBodySize, _ = strconv.Atoi(c.QueryParam("max_size"))
 	return mr, mr.validate()
 }
-
-func transformToReceiveQueueMessageString(tr *Transport) (string, error) {
-	message := &pb.QueueMessage{}
-	err := tr.Unmarshal(message)
-	if err != nil {
-		return "", err
-	}
-	queueMessage := actions.NewReceiveQueueMessageResponse().
-		SetMessageId(message.MessageID).
-		SetBody(detectAndConvertToAny(message.Body)).
-		SetMetadata(message.Metadata).
-		SetClientId(message.ClientID).
-		SetDelayedTo(message.Attributes.DelayedTo).
-		SetExpirationAt(message.Attributes.ExpirationAt).
-		SetReceivedCount(int64(message.Attributes.ReceiveCount)).
-		SetReRoutedFrom(message.Attributes.ReRoutedFromQueue).
-		SetTimestamp(message.Attributes.Timestamp).
-		SetSequence(int64(message.Attributes.Sequence))
-	str, err := json.MarshalIndent(queueMessage, "", "  ")
-	if err != nil {
-		return "", err
-	}
-	return string(str), nil
-}
-
-func detectAndConvertToAny(data []byte) any {
-	jsonObject := make(map[string]interface{})
-	err := json.Unmarshal(data, &jsonObject)
-	if err == nil {
-		return jsonObject
-	}
-	jsonArray := make([]map[string]interface{}, 0)
-	err = json.Unmarshal(data, &jsonArray)
-	if err == nil {
-
-		return jsonArray
-	}
-	return string(data)
-}
-
-//func normalizeBodyToString(payload []byte) []byte {
-//	//
-//	//if payload == nil {
-//	//	return nil
-//	//}
-//	//jsonObject := make(map[string]interface{})
-//	//err := json.Unmarshal(payload, &jsonObject)
-//	//if err == nil {
-//	//	data, _ := json.MarshalIndent(jsonObject, "", "\t")
-//	//	return string(data)
-//	//}
-//	//jsonArray := make([]map[string]interface{}, 0)
-//	//err = json.Unmarshal(payload, &jsonArray)
-//	//if err == nil {
-//	//	data, _ := json.MarshalIndent(jsonArray, "", "\t")
-//	//	return string(data)
-//	//}
-//	//return string(payload)
-//}
