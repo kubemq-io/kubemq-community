@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"github.com/dustin/go-humanize"
 	"time"
 )
@@ -14,12 +15,13 @@ type ChannelDTO struct {
 	Incoming          *BaseValuesDTO `json:"incoming"`
 	Outgoing          *BaseValuesDTO `json:"outgoing"`
 	IsActive          bool           `json:"isActive"`
+	ChannelKey        string         `json:"channelKey"`
 }
 
 // create a new ChannelDTO from Entity
 
 func NewChannelDTO(_type, name string, entity *Entity) *ChannelDTO {
-	return &ChannelDTO{
+	c := &ChannelDTO{
 		Name:              name,
 		Type:              _type,
 		Total:             NewBaseValuesDTOFromBaseValues(entity.In.CombineWIth(entity.Out)),
@@ -29,4 +31,6 @@ func NewChannelDTO(_type, name string, entity *Entity) *ChannelDTO {
 		LastActivityHuman: humanize.Time(time.UnixMilli(entity.LastSeen)),
 		IsActive:          entity.IsActive(),
 	}
+	c.ChannelKey = fmt.Sprintf("%s-%s", c.Type, c.Name)
+	return c
 }

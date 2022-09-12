@@ -12,10 +12,11 @@ type TopChannelDTO struct {
 	Sent         string `json:"sent"`
 	Delivered    string `json:"delivered"`
 	Clients      string `json:"clients"`
+	ChannelKey   string `json:"channelKey"`
 }
 
 func NewTopChannelDTO(channel *ChannelDTO) *TopChannelDTO {
-	return &TopChannelDTO{
+	tc := &TopChannelDTO{
 		Type:         transformType(channel.Type),
 		Channel:      channel.Name,
 		LastActivity: channel.LastActivityHuman,
@@ -23,6 +24,8 @@ func NewTopChannelDTO(channel *ChannelDTO) *TopChannelDTO {
 		Delivered:    fmt.Sprintf("%s/%s", channel.Outgoing.MessagesHumanized, channel.Outgoing.VolumeHumanized),
 		Clients:      humanize.Comma(channel.Incoming.Clients + channel.Outgoing.Clients),
 	}
+	tc.ChannelKey = fmt.Sprintf("%s-%s", tc.Type, tc.Channel)
+	return tc
 }
 
 func transformType(value string) string {
