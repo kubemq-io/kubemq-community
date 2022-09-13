@@ -29,7 +29,7 @@ func (r *SendQueueMessageResponse) SetExpiresAt(expiresAt int64) *SendQueueMessa
 	if expiresAt == 0 {
 		return r
 	}
-	r.ExpiresAt = time.Unix(0, expiresAt).Format(time.RFC3339)
+	r.ExpiresAt = time.Unix(0, expiresAt).Format("2006-01-02 15:04:05")
 	return r
 }
 
@@ -37,6 +37,6 @@ func (r *SendQueueMessageResponse) SetDelayedTo(delayedTo int64) *SendQueueMessa
 	if delayedTo == 0 {
 		return r
 	}
-	r.DelayedTo = time.Unix(0, delayedTo).Format(time.RFC3339)
+	r.DelayedTo = time.Unix(0, delayedTo).Format("2006-01-02 15:04:05")
 	return r
 }
