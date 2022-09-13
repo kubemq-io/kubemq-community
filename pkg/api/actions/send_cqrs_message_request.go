@@ -8,7 +8,6 @@ import (
 type SendCQRSMessageRequest struct {
 	RequestId    string `json:"requestId"`
 	Channel      string `json:"channel"`
-	ClientId     string `json:"clientId,omitempty"`
 	Metadata     string `json:"metadata,omitempty"`
 	Body         any    `json:"body"`
 	Tags         string `json:"tags,omitempty"`
