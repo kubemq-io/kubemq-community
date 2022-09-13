@@ -116,6 +116,9 @@ func CreateApiServer(ctx context.Context, broker *broker.Service, appConfigs ...
 	apiGroup.GET("/subscribe/pubsub", func(c echo.Context) error {
 		return s.apiService.handlerSubscribeToPubSub(c)
 	})
+	apiGroup.GET("/subscribe/cqrs", func(c echo.Context) error {
+		return s.apiService.handlerSubscribeToCQRS(c)
+	})
 	apiGroup.GET("/stream_queue_messages", func(c echo.Context) error {
 		return s.apiService.handlerStreamQueueMessages(c)
 	})

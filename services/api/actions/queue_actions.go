@@ -115,7 +115,6 @@ func streamQueueMessages(ctx context.Context, streamClient *sdk.QueuesClient, re
 	var currentResponse *sdk.QueueTransactionMessageResponse
 	var doneChan chan struct{}
 	defer func() {
-		fmt.Println("closing stream queue messages")
 		if doneChan != nil {
 			doneChan <- struct{}{}
 		}

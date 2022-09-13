@@ -148,8 +148,11 @@ func MonitorHandlerFunc(ctx context.Context, c echo.Context) error {
 			return err
 		case tr := <-transportCh:
 			if tr.Error == nil {
-				if tr.Kind == "queue" {
-					txChan <- NewTransportQueueMessageDto(tr).ToJson()
+				buffer, err := TransformToDtoString(tr)
+				if err != nil {
+					logger.Errorw("error on transform to string", "error", err.Error())
+				} else {
+					txChan <- buffer
 				}
 			} else {
 				txChan <- tr.String()

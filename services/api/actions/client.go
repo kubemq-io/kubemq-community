@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/kubemq-io/kubemq-community/pkg/api/actions"
-	"os"
-
 	sdk "github.com/kubemq-io/kubemq-go"
 )
 
@@ -19,19 +17,20 @@ func NewClient() *Client {
 }
 
 func (c *Client) Init(ctx context.Context, localPort int) error {
-	host, err := os.Hostname()
-	if err != nil {
-		return err
-	}
+	//host, err := os.Hostname()
+	//if err != nil {
+	//	return err
+	//}
+	var err error
 	c.client, err = sdk.NewClient(ctx,
-		sdk.WithAddress(host, localPort),
+		sdk.WithAddress("0.0.0.0", localPort),
 		sdk.WithTransportType(sdk.TransportTypeGRPC),
 		sdk.WithClientId("kubemq-admin-client"))
 	if err != nil {
 		return err
 	}
 	c.streamClient, err = sdk.NewQueuesStreamClient(ctx,
-		sdk.WithAddress(host, localPort),
+		sdk.WithAddress("0.0.0.0", localPort),
 		sdk.WithTransportType(sdk.TransportTypeGRPC),
 		sdk.WithClientId("kubemq-admin-client"))
 	if err != nil {
@@ -53,7 +52,7 @@ func (c *Client) CreateChannel(ctx context.Context, request *actions.CreateChann
 			return err
 		}
 	case "commands", "queries":
-		err := createCommandsQueriesChannel(ctx, c.client, request.Name, request.Type == "commands")
+		err := createCQRSChannel(ctx, c.client, request.Name, request.Type == "commands")
 		if err != nil {
 			return err
 		}
@@ -110,4 +109,26 @@ func (c *Client) SubscribeToEventsStore(ctx context.Context, channel, group, cli
 
 func (c *Client) StreamQueueMessages(ctx context.Context, requests chan *actions.StreamQueueMessagesRequest, responses chan *actions.StreamQueueMessagesResponse) {
 	streamQueueMessages(ctx, c.streamClient, requests, responses)
+}
+func (c *Client) SendCQRSMessageRequest(ctx context.Context, request *actions.SendCQRSMessageRequest) (*actions.ReceiveCQRSResponse, error) {
+	return sendCQRSMessageRequest(ctx, c.client, request)
+}
+
+func (c *Client) SendCQRSMessageResponse(ctx context.Context, response *actions.SendCQRSMessageResponse) error {
+	return sendCQRSResponse(ctx, c.client, response)
+}
+
+func (c *Client) SubscribeToCommands(ctx context.Context, channel, group string, messagesChan chan *actions.SubscribeCQRSRequestMessage, errChan chan error) error {
+	err := subscribeToCommands(ctx, c.client, channel, group, messagesChan, errChan)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+func (c *Client) SubscribeToQueries(ctx context.Context, channel, group string, messagesChan chan *actions.SubscribeCQRSRequestMessage, errChan chan error) error {
+	err := subscribeToQueries(ctx, c.client, channel, group, messagesChan, errChan)
+	if err != nil {
+		return err
+	}
+	return nil
 }
