@@ -6,8 +6,8 @@ import (
 )
 
 type SendCQRSMessageResponse struct {
-	RequestId    string `json:"responseId"`
-	ReplyChannel string `json:"channel"`
+	RequestId    string `json:"requestId"`
+	ReplyChannel string `json:"replyChannel"`
 	Metadata     string `json:"metadata,omitempty"`
 	Body         any    `json:"body"`
 	Tags         string `json:"tags,omitempty"`
@@ -50,7 +50,7 @@ func (r *SendCQRSMessageResponse) ParseRequest(req *Request) error {
 
 func (r *SendCQRSMessageResponse) Validate() error {
 	if r.ReplyChannel == "" {
-		return fmt.Errorf("channel not set")
+		return fmt.Errorf("reply channel not set")
 	}
 	if r.Body == nil {
 		return fmt.Errorf("body not set")

@@ -8,7 +8,7 @@ type SubscribePubSubMessage struct {
 	MessageId string `json:"messageId"`
 	Metadata  string `json:"metadata"`
 	Body      any    `json:"body"`
-	Timestamp string `json:"timestamp"`
+	Timestamp int64  `json:"timestamp"`
 	Tags      string `json:"tags,omitempty"`
 	Sequence  int64  `json:"sequence,omitempty"`
 }
@@ -33,7 +33,7 @@ func (m *SubscribePubSubMessage) SetBody(body any) *SubscribePubSubMessage {
 }
 
 func (m *SubscribePubSubMessage) SetTimestamp(value time.Time) *SubscribePubSubMessage {
-	m.Timestamp = value.Format("2006-01-02 15:04:05")
+	m.Timestamp = value.UnixMilli()
 	return m
 }
 

@@ -33,9 +33,9 @@ func transformType(value string) string {
 	case "queues":
 		return "Queue"
 	case "events":
-		return "PubSub / Events"
+		return "Events"
 	case "events_store":
-		return "PubSub / Events-Store"
+		return "Events-Store"
 	case "commands":
 		return "Commands"
 	case "queries":

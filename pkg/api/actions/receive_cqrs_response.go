@@ -4,7 +4,7 @@ import "time"
 
 type ReceiveCQRSResponse struct {
 	Metadata  string `json:"metadata,omitempty"`
-	Body      any    `json:"body"`
+	Body      any    `json:"body,omitempty"`
 	Tags      string `json:"tags,omitempty"`
 	Timestamp int64  `json:"timestamp,omitempty"`
 	Executed  bool   `json:"executed"`
