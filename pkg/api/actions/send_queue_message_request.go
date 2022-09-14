@@ -56,7 +56,7 @@ func (r *SendQueueMessageRequest) Validate() error {
 	if r.Tags != "" {
 		parts := strings.Split(r.Tags, ",")
 		for _, part := range parts {
-			keyValue := strings.Split(part, ":")
+			keyValue := strings.Split(part, "=")
 			if len(keyValue) != 2 {
 				return fmt.Errorf("invalid tag %s", part)
 			}
