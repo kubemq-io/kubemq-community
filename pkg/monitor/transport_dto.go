@@ -30,15 +30,15 @@ func TransformToDtoString(tr *Transport) (string, error) {
 
 type TransportQueueMessageDto struct {
 	MessageId     string `json:"messageId"`
-	Metadata      string `json:"metadata"`
-	Body          any    `json:"body"`
-	Timestamp     string `json:"timestamp"`
-	Sequence      int64  `json:"sequence"`
-	Tags          string `json:"tags"`
-	ReceivedCount int32  `json:"receivedCount"`
-	ReRoutedFrom  string `json:"reRoutedFrom"`
-	ExpirationAt  string `json:"expirationAt"`
-	DelayedTo     string `json:"delayedTo"`
+	Metadata      string `json:"metadata,omitempty"`
+	Body          any    `json:"body,omitempty"`
+	Timestamp     string `json:"timestamp,omitempty"`
+	Sequence      int64  `json:"sequence,omitempty"`
+	Tags          string `json:"tags,omitempty"`
+	ReceivedCount int32  `json:"receivedCount,omitempty"`
+	ReRoutedFrom  string `json:"reRoutedFrom,omitempty"`
+	ExpirationAt  string `json:"expirationAt,omitempty"`
+	DelayedTo     string `json:"delayedTo,omitempty"`
 }
 
 func NewTransportQueueMessageDto(tr *Transport) *TransportQueueMessageDto {
@@ -51,35 +51,25 @@ func NewTransportQueueMessageDto(tr *Transport) *TransportQueueMessageDto {
 	dto.MessageId = message.MessageID
 	if message.Metadata != "" {
 		dto.Metadata = message.Metadata
-	} else {
-		dto.Metadata = "N/A"
 	}
 	if message.Attributes.Timestamp > 0 {
 		ts := time.Unix(0, message.Attributes.Timestamp)
 		dto.Timestamp = ts.Format("2006-01-02 15:04:05")
-	} else {
-		dto.Timestamp = "N/A"
 	}
 	dto.Sequence = int64(message.Attributes.Sequence)
 	if len(message.Tags) > 0 {
 		data, _ := json.Marshal(message.Tags)
 		dto.Tags = string(data)
-	} else {
-		dto.Tags = "N/A"
 	}
 	dto.ReceivedCount = message.Attributes.ReceiveCount
 	dto.ReRoutedFrom = message.Attributes.ReRoutedFromQueue
 	if message.Attributes.ExpirationAt > 0 {
 		ts := time.Unix(0, message.Attributes.ExpirationAt)
 		dto.ExpirationAt = ts.Format("2006-01-02 15:04:05")
-	} else {
-		dto.ExpirationAt = "N/A"
 	}
 	if message.Attributes.DelayedTo > 0 {
 		ts := time.Unix(0, message.Attributes.DelayedTo)
 		dto.DelayedTo = ts.Format("2006-01-02 15:04:05")
-	} else {
-		dto.DelayedTo = "N/A"
 	}
 	dto.Body = detectAndConvertToAny(message.Body)
 	return dto
@@ -87,11 +77,11 @@ func NewTransportQueueMessageDto(tr *Transport) *TransportQueueMessageDto {
 
 type TransportPubSubMessageDto struct {
 	MessageId string `json:"messageId"`
-	Metadata  string `json:"metadata"`
-	Body      any    `json:"body"`
+	Metadata  string `json:"metadata,omitempty"`
+	Body      any    `json:"body,omitempty"`
 	Timestamp string `json:"timestamp,omitempty"`
 	Sequence  int64  `json:"sequence,omitempty"`
-	Tags      string `json:"tags"`
+	Tags      string `json:"tags,omitempty"`
 }
 
 func NewTransportPubSubMessageDto(tr *Transport) *TransportPubSubMessageDto {
@@ -104,21 +94,15 @@ func NewTransportPubSubMessageDto(tr *Transport) *TransportPubSubMessageDto {
 	dto.MessageId = message.EventID
 	if message.Metadata != "" {
 		dto.Metadata = message.Metadata
-	} else {
-		dto.Metadata = "N/A"
 	}
 	if message.Timestamp > 0 {
 		ts := time.Unix(0, message.Timestamp)
 		dto.Timestamp = ts.Format("2006-01-02 15:04:05")
-	} else {
-		dto.Timestamp = "N/A"
 	}
 	dto.Sequence = int64(message.Sequence)
 	if len(message.Tags) > 0 {
 		data, _ := json.Marshal(message.Tags)
 		dto.Tags = string(data)
-	} else {
-		dto.Tags = "N/A"
 	}
 	dto.Body = detectAndConvertToAny(message.Body)
 	return dto
@@ -126,10 +110,10 @@ func NewTransportPubSubMessageDto(tr *Transport) *TransportPubSubMessageDto {
 
 type TransportRequestMessageDto struct {
 	RequestId string `json:"requestId"`
-	Metadata  string `json:"metadata"`
-	Body      any    `json:"body"`
-	Timeout   int32  `json:"timeout"`
-	Tags      string `json:"tags"`
+	Metadata  string `json:"metadata,omitempty"`
+	Body      any    `json:"body,omitempty"`
+	Timeout   int32  `json:"timeout,omitempty"`
+	Tags      string `json:"tags,omitempty"`
 }
 
 func NewTransportRequestMessageDto(tr *Transport) *TransportRequestMessageDto {
@@ -142,15 +126,11 @@ func NewTransportRequestMessageDto(tr *Transport) *TransportRequestMessageDto {
 	dto.RequestId = message.RequestID
 	if message.Metadata != "" {
 		dto.Metadata = message.Metadata
-	} else {
-		dto.Metadata = "N/A"
 	}
 	dto.Timeout = message.Timeout
 	if len(message.Tags) > 0 {
 		data, _ := json.Marshal(message.Tags)
 		dto.Tags = string(data)
-	} else {
-		dto.Tags = "N/A"
 	}
 	dto.Body = detectAndConvertToAny(message.Body)
 	return dto
@@ -161,9 +141,9 @@ type TransportResponseMessageDto struct {
 	Metadata  string `json:"metadata,omitempty"`
 	Body      any    `json:"body,omitempty"`
 	Timestamp string `json:"timestamp,omitempty"`
-	Tags      string `json:"tags"`
+	Tags      string `json:"tags,omitempty"`
 	Error     string `json:"error,omitempty"`
-	Executed  bool   `json:"executed"`
+	Executed  bool   `json:"executed,omitempty"`
 }
 
 func NewTransportResponseMessageDto(tr *Transport) *TransportResponseMessageDto {
@@ -176,20 +156,14 @@ func NewTransportResponseMessageDto(tr *Transport) *TransportResponseMessageDto 
 	dto.RequestId = message.RequestID
 	if message.Metadata != "" {
 		dto.Metadata = message.Metadata
-	} else {
-		dto.Metadata = "N/A"
 	}
 	if message.Timestamp > 0 {
-		ts := time.Unix(0, message.Timestamp)
+		ts := time.Unix(message.Timestamp, 0)
 		dto.Timestamp = ts.Format("2006-01-02 15:04:05")
-	} else {
-		dto.Timestamp = "N/A"
 	}
 	if len(message.Tags) > 0 {
 		data, _ := json.Marshal(message.Tags)
 		dto.Tags = string(data)
-	} else {
-		dto.Tags = "N/A"
 	}
 	if message.Body != nil {
 		dto.Body = detectAndConvertToAny(message.Body)

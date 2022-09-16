@@ -1,7 +1,5 @@
 package actions
 
-import "time"
-
 type ReceiveCQRSResponse struct {
 	Metadata  string `json:"metadata,omitempty"`
 	Body      any    `json:"body,omitempty"`
@@ -26,8 +24,7 @@ func (m *ReceiveCQRSResponse) SetBody(body any) *ReceiveCQRSResponse {
 }
 
 func (m *ReceiveCQRSResponse) SetTimestamp(timestamp int64) *ReceiveCQRSResponse {
-	t := time.Unix(0, timestamp)
-	m.Timestamp = t.UnixMilli()
+	m.Timestamp = timestamp
 	return m
 }
 

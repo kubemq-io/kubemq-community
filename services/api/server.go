@@ -2,9 +2,11 @@ package api
 
 import (
 	"context"
+	"embed"
 	"encoding/json"
 	"fmt"
 	"github.com/kubemq-io/kubemq-community/services/broker"
+	"strings"
 
 	"github.com/kubemq-io/kubemq-community/services/metrics"
 
@@ -19,6 +21,8 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 )
 
+var StaticAssets embed.FS
+
 type Server struct {
 	echoWebServer   *echo.Echo
 	logger          *logging.Logger
@@ -32,6 +36,27 @@ type Server struct {
 
 var appConfig *config.Config
 
+func customHTTPErrorHandler(err error, c echo.Context) {
+	uri := c.Request().RequestURI
+	if strings.HasPrefix(uri, "/dash") {
+		c.Redirect(301, "/dashboard")
+		return
+	}
+	if strings.HasPrefix(uri, "/que") {
+		c.Redirect(301, "/queues")
+		return
+	}
+	if strings.HasPrefix(uri, "/pub") {
+		c.Redirect(301, "/pubsub")
+		return
+	}
+	if strings.HasPrefix(uri, "/cq") {
+		c.Redirect(301, "/cqrs")
+		return
+	}
+
+	c.String(404, err.Error())
+}
 func CreateApiServer(ctx context.Context, broker *broker.Service, appConfigs ...*config.Config) (*Server, error) {
 	if len(appConfigs) == 0 {
 		appConfig = config.GetAppConfig()
@@ -53,8 +78,9 @@ func CreateApiServer(ctx context.Context, broker *broker.Service, appConfigs ...
 	e.Logger = logging.GetLogFactory().NewEchoLogger("server-api")
 	e.Use(middleware.Recover())
 	e.Use(loggingMiddleware(s.logger))
-	e.Use(middleware.CORS())
-
+	e.HTTPErrorHandler = customHTTPErrorHandler
+	fs := echo.MustSubFS(StaticAssets, "assets")
+	e.StaticFS("/", fs)
 	e.GET("/health", func(c echo.Context) error {
 
 		if s.broker.IsHealthy() {
