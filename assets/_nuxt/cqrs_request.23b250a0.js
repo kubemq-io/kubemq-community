@@ -1,0 +1,1 @@
+import{G as e}from"./request.793839eb.js";class t extends e{constructor(s){super("send_cqrs_message_request",s)}}class a extends e{constructor(s){super("send_cqrs_message_response",s)}}export{t as S,a};

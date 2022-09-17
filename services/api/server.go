@@ -78,6 +78,7 @@ func CreateApiServer(ctx context.Context, broker *broker.Service, appConfigs ...
 	e.Logger = logging.GetLogFactory().NewEchoLogger("server-api")
 	e.Use(middleware.Recover())
 	e.Use(loggingMiddleware(s.logger))
+	e.Use(middleware.CORS())
 	e.HTTPErrorHandler = customHTTPErrorHandler
 	fs := echo.MustSubFS(StaticAssets, "assets")
 	e.StaticFS("/", fs)

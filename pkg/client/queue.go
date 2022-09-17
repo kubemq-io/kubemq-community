@@ -642,10 +642,14 @@ func (qc *QueueClient) processMessagePolicy(msg *pb.QueueMessage) bool {
 	newMsg.Channel = msg.Policy.MaxReceiveQueue
 	channel := prefixQueues + newMsg.Channel
 	data, _ := newMsg.Marshal()
+	respForMetrics := &pb.SendQueueMessageResult{}
 	err := qc.queueConn.Publish(channel, data)
 	if err != nil {
+		respForMetrics.IsError = true
+		respForMetrics.Error = err.Error()
 		qc.logger.Errorw("process send message policy failed with error", "error", err.Error())
 	}
+	metrics.ReportSendQueueMessage(newMsg, respForMetrics)
 	return false
 }
 func (qc *QueueClient) MonitorQueueMessages(ctx context.Context, channel string, msgCh chan *pb.QueueMessage, errCh chan error, done chan bool) {

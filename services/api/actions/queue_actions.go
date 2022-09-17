@@ -129,7 +129,6 @@ func streamQueueMessages(ctx context.Context, streamClient *sdk.QueuesClient, re
 		case request := <-requests:
 			switch request.RequestType {
 			case actions.PollQueueMessagesRequestType:
-				fmt.Println("polling queue messages")
 				if currentResponse != nil {
 					responses <- actions.NewStreamQueueMessageResponse().
 						SetRequestType(request.RequestType).

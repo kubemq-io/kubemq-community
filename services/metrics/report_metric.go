@@ -103,7 +103,6 @@ func ReportResponse(response *pb.Response, err error) {
 func ReportSendQueueMessage(msg *pb.QueueMessage, res *pb.SendQueueMessageResult) {
 
 	if exporter != nil {
-
 		if msg == nil || res == nil {
 			exporter.metricsDropped.Inc()
 			return
