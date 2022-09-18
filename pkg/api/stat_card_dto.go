@@ -63,7 +63,7 @@ func (s *StatCardDTO) AddQueuesFamily(primaryValue, secondaryValue int64) *StatC
 	s.queuesSecondaryItemValue = secondaryValue
 	return s
 }
-func (s *StatCardDTO) AddPubSunFamily(primaryValue, secondaryValue int64) *StatCardDTO {
+func (s *StatCardDTO) AddPubSubFamily(primaryValue, secondaryValue int64) *StatCardDTO {
 	s.PubSub = NewStatCardSectionDTO()
 	s.PubSub.SetTitle("PubSub")
 	s.primaryItemValue += primaryValue
@@ -96,7 +96,7 @@ func NewStatCardDTOs() *StatCardDTOs {
 func (s *StatCardDTOs) AddChannels(active, total string, queues, pubsub, commandsQueries *FamilyDTO) *StatCardDTOs {
 	sc := NewStatCardDTO("Active", active, "Total", total)
 	sc.AddQueuesFamily(queues.ActiveChannels, queues.Channels)
-	sc.AddPubSunFamily(pubsub.ActiveChannels, pubsub.Channels)
+	sc.AddPubSubFamily(pubsub.ActiveChannels, pubsub.Channels)
 	sc.AddCommandsQueriesFamily(commandsQueries.ActiveChannels, commandsQueries.Channels)
 
 	if sc.secondaryItemValue > 0 {
@@ -129,21 +129,21 @@ func (s *StatCardDTOs) AddChannels(active, total string, queues, pubsub, command
 func (s *StatCardDTOs) AddOutgoing(messages, volume string, queues, pubsub, commandsQueries *FamilyDTO) *StatCardDTOs {
 	sc := NewStatCardDTO("Messages", messages, "Volume", volume)
 	sc.AddQueuesFamily(queues.Outgoing.Messages, queues.Outgoing.Volume)
-	sc.AddPubSunFamily(pubsub.Outgoing.Messages, pubsub.Outgoing.Volume)
+	sc.AddPubSubFamily(pubsub.Outgoing.Messages, pubsub.Outgoing.Volume)
 	sc.AddCommandsQueriesFamily(commandsQueries.Outgoing.Messages, commandsQueries.Outgoing.Volume)
 
 	if queues.Outgoing.Messages > 0 {
-		sc.Queues.SetCaption(fmt.Sprintf("(%s/%s)", queues.Outgoing.MessagesHumanized, queues.Incoming.VolumeHumanized))
+		sc.Queues.SetCaption(fmt.Sprintf("(%s/%s)", queues.Outgoing.MessagesHumanized, queues.Outgoing.VolumeHumanized))
 	} else {
 		sc.Queues.SetCaption("(0/0)")
 	}
 	if pubsub.Outgoing.Messages > 0 {
-		sc.PubSub.SetCaption(fmt.Sprintf("(%s/%s)", pubsub.Outgoing.MessagesHumanized, pubsub.Incoming.VolumeHumanized))
+		sc.PubSub.SetCaption(fmt.Sprintf("(%s/%s)", pubsub.Outgoing.MessagesHumanized, pubsub.Outgoing.VolumeHumanized))
 	} else {
 		sc.PubSub.SetCaption("(0/0)")
 	}
 	if commandsQueries.Outgoing.Messages > 0 {
-		sc.CommandsQueries.SetCaption(fmt.Sprintf("(%s/%s)", commandsQueries.Outgoing.MessagesHumanized, commandsQueries.Incoming.VolumeHumanized))
+		sc.CommandsQueries.SetCaption(fmt.Sprintf("(%s/%s)", commandsQueries.Outgoing.MessagesHumanized, commandsQueries.Outgoing.VolumeHumanized))
 	} else {
 		sc.CommandsQueries.SetCaption("(0/0)")
 	}
@@ -167,7 +167,7 @@ func (s *StatCardDTOs) AddOutgoing(messages, volume string, queues, pubsub, comm
 func (s *StatCardDTOs) AddIncoming(messages, volume string, queues, pubsub, commandsQueries *FamilyDTO) *StatCardDTOs {
 	sc := NewStatCardDTO("Messages", messages, "Volume", volume)
 	sc.AddQueuesFamily(queues.Incoming.Messages, queues.Incoming.Volume)
-	sc.AddPubSunFamily(pubsub.Incoming.Messages, pubsub.Incoming.Volume)
+	sc.AddPubSubFamily(pubsub.Incoming.Messages, pubsub.Incoming.Volume)
 	sc.AddCommandsQueriesFamily(commandsQueries.Incoming.Messages, commandsQueries.Incoming.Volume)
 
 	if queues.Incoming.Messages > 0 {
@@ -206,7 +206,7 @@ func (s *StatCardDTOs) AddIncoming(messages, volume string, queues, pubsub, comm
 func (s *StatCardDTOs) AddClients(total string, queues, pubsub, commandsQueries *FamilyDTO) *StatCardDTOs {
 	sc := NewStatCardDTO("Total", total, "", "")
 	sc.AddQueuesFamily(queues.Clients, 0)
-	sc.AddPubSunFamily(pubsub.Clients, 0)
+	sc.AddPubSubFamily(pubsub.Clients, 0)
 	sc.AddCommandsQueriesFamily(commandsQueries.Clients, 0)
 
 	sc.Queues.SetCaption(fmt.Sprintf("(%d)", sc.queuesPrimaryItemValue))
