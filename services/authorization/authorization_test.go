@@ -14,6 +14,9 @@ import (
 	"testing"
 )
 
+func TestMain(m *testing.M) {
+	os.Exit(m.Run())
+}
 func savePolicyFile(policy, filename string) error {
 	return ioutil.WriteFile(filename, []byte(policy), 0600)
 }

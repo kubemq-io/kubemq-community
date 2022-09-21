@@ -27,6 +27,9 @@ import (
 
 var testPort = *atomic.NewInt32(int32(39500))
 
+func TestMain(m *testing.M) {
+	os.Exit(m.Run())
+}
 func init() {
 	_ = logging.CreateLoggerFactory(context.Background(), "test", &config.LogConfig{
 		Level: "debug",

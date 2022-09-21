@@ -60,6 +60,9 @@ MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEuAfwZOEgDIHSfMknOPwbLvhaWZxL
 dZafmcxcb4FMAg8ZWrH9Geq2u7TKbq/AvX4PZYqXFzIixCq0YEh3rM2Rog==
 -----END PUBLIC KEY-----`
 
+func TestMain(m *testing.M) {
+	os.Exit(m.Run())
+}
 func saveToFile(data []byte, filename string) error {
 	return ioutil.WriteFile(filename, []byte(data), 0600)
 }

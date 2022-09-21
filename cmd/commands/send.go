@@ -79,11 +79,9 @@ func (o *SendOptions) Run(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("create kubemq client, %s", err.Error())
 	}
-
 	defer func() {
 		_ = client.Close()
 	}()
-
 	msg := client.C().
 		SetChannel(o.channel).
 		SetId(uuid.New()).

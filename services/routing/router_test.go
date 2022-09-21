@@ -3,6 +3,7 @@ package routing
 import (
 	pb "github.com/kubemq-io/protobuf/go"
 	"github.com/stretchr/testify/require"
+	"os"
 	"testing"
 )
 
@@ -135,6 +136,10 @@ var copiedQueueMessageFromQueueMessage = &pb.QueueMessage{
 		MaxReceiveCount:   3,
 		MaxReceiveQueue:   "max-receive-queue",
 	},
+}
+
+func TestMain(m *testing.M) {
+	os.Exit(m.Run())
 }
 
 type testRouterMessage struct {
