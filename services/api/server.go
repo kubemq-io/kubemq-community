@@ -2,9 +2,11 @@ package api
 
 import (
 	"context"
+	"embed"
 	"encoding/json"
 	"fmt"
 	"github.com/kubemq-io/kubemq-community/services/broker"
+	"strings"
 
 	"github.com/kubemq-io/kubemq-community/services/metrics"
 
@@ -19,6 +21,8 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 )
 
+var StaticAssets embed.FS
+
 type Server struct {
 	echoWebServer   *echo.Echo
 	logger          *logging.Logger
@@ -32,6 +36,27 @@ type Server struct {
 
 var appConfig *config.Config
 
+func customHTTPErrorHandler(err error, c echo.Context) {
+	uri := c.Request().RequestURI
+	if strings.HasPrefix(uri, "/dash") {
+		c.Redirect(301, "/dashboard")
+		return
+	}
+	if strings.HasPrefix(uri, "/que") {
+		c.Redirect(301, "/queues")
+		return
+	}
+	if strings.HasPrefix(uri, "/pub") {
+		c.Redirect(301, "/pubsub")
+		return
+	}
+	if strings.HasPrefix(uri, "/cq") {
+		c.Redirect(301, "/cqrs")
+		return
+	}
+
+	c.String(404, err.Error())
+}
 func CreateApiServer(ctx context.Context, broker *broker.Service, appConfigs ...*config.Config) (*Server, error) {
 	if len(appConfigs) == 0 {
 		appConfig = config.GetAppConfig()
@@ -44,6 +69,9 @@ func CreateApiServer(ctx context.Context, broker *broker.Service, appConfigs ...
 		metricsExporter: metrics.GetExporter(),
 	}
 	s.apiService = newService(appConfig, broker, s.metricsExporter)
+	if err := s.apiService.init(ctx, s.logger); err != nil {
+		return nil, err
+	}
 	s.context, s.cancelFunc = context.WithCancel(ctx)
 	e := echo.New()
 	e.HideBanner = true
@@ -51,7 +79,9 @@ func CreateApiServer(ctx context.Context, broker *broker.Service, appConfigs ...
 	e.Use(middleware.Recover())
 	e.Use(loggingMiddleware(s.logger))
 	e.Use(middleware.CORS())
-
+	e.HTTPErrorHandler = customHTTPErrorHandler
+	fs := echo.MustSubFS(StaticAssets, "assets")
+	e.StaticFS("/", fs)
 	e.GET("/health", func(c echo.Context) error {
 
 		if s.broker.IsHealthy() {
@@ -99,19 +129,29 @@ func CreateApiServer(ctx context.Context, broker *broker.Service, appConfigs ...
 	apiGroup.GET("/snapshot", func(c echo.Context) error {
 		return s.apiService.getSnapshot(c)
 	})
-	apiGroup.GET("/info", func(c echo.Context) error {
-		return s.apiService.getInfo(c)
-	})
-	apiGroup.GET("/status", func(c echo.Context) error {
-		return s.apiService.getStatus(c)
-	})
-	apiGroup.GET("/entities", func(c echo.Context) error {
-		return s.apiService.getEntities(c)
+	apiGroup.POST("/request", func(c echo.Context) error {
+		return s.apiService.handleRequests(c)
 	})
 	apiGroup.GET("/config", func(c echo.Context) error {
 		return c.JSONPretty(http.StatusOK, appConfig, "\t")
 	})
-
+	apiGroup.GET("/monitor", func(c echo.Context) error {
+		c.Set("appconf", appConfig)
+		_ = monitor.MonitorHandlerFunc(s.context, c)
+		return nil
+	})
+	apiGroup.GET("/subscribe/pubsub", func(c echo.Context) error {
+		return s.apiService.handlerSubscribeToPubSub(c)
+	})
+	apiGroup.GET("/subscribe/cqrs", func(c echo.Context) error {
+		return s.apiService.handlerSubscribeToCQRS(c)
+	})
+	apiGroup.GET("/stream_queue_messages", func(c echo.Context) error {
+		return s.apiService.handlerStreamQueueMessages(c)
+	})
+	apiGroup.GET("/connection", func(c echo.Context) error {
+		return s.apiService.handlerConnectionStatus(c)
+	})
 	e.Server.ReadTimeout = time.Duration(180) * time.Second
 	e.Server.WriteTimeout = time.Duration(180) * time.Second
 	s.echoWebServer = e
@@ -141,8 +181,8 @@ func (s *Server) AddHealthFunc(fn func() json.RawMessage) {
 
 func (s *Server) Close() {
 	_ = s.echoWebServer.Shutdown(context.Background())
+	_ = s.apiService.stop()
 	s.cancelFunc()
-
 }
 func loggingMiddleware(l *logging.Logger) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {

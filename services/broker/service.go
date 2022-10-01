@@ -7,8 +7,6 @@ import (
 	"time"
 
 	"github.com/kubemq-io/kubemq-community/pkg/http"
-	"github.com/kubemq-io/kubemq-community/services/metrics"
-
 	"github.com/kubemq-io/kubemq-community/pkg/logging"
 
 	"github.com/kubemq-io/kubemq-community/config"
@@ -83,6 +81,7 @@ func (s *Service) Close() {
 
 func (s *Service) GetQueues(ctx context.Context) (*Queues, error) {
 	ch := &channels{}
+	//fmt.Println(fmt.Sprintf("http://localhost:%d/streaming/channelsz?limit=100000&subs=1", s.appConfig.Broker.MonitoringPort))
 	err := http.Get(ctx, fmt.Sprintf("http://localhost:%d/streaming/channelsz?limit=100000&subs=1", s.appConfig.Broker.MonitoringPort), ch)
 	if err != nil {
 		return nil, err
@@ -97,48 +96,6 @@ func (s *Service) GetEventsStores(ctx context.Context) (*Queues, error) {
 		return nil, err
 	}
 	return ch.toQueues("_EVENTS_STORE_."), nil
-}
-
-func (s *Service) reportPendingMetrics(ctx context.Context) {
-	queuesList, err := s.GetQueues(ctx)
-	if err != nil {
-		s.logger.Errorf("error on getting queues info for metrics reporting: %s", err.Error())
-		return
-	}
-	for _, queue := range queuesList.Queues {
-		for _, client := range queue.clients {
-			metrics.ReportPending("queues", client.ClientId, queue.Name, float64(client.Pending))
-		}
-	}
-
-	eventsList, err := s.GetEventsStores(ctx)
-	if err != nil {
-		s.logger.Errorf("error on getting events_store info for metrics reporting: %s", err.Error())
-		return
-	}
-	for _, event := range eventsList.Queues {
-		for _, client := range event.clients {
-			metrics.ReportPending("events_store", client.ClientId, event.Name, float64(client.Pending))
-		}
-	}
-
-}
-
-func (s *Service) runReportWorker(ctx context.Context) {
-
-	for {
-		select {
-		case <-time.After(reportTimeInterval):
-			if !s.disableMetricsReporting {
-				s.reportPendingMetrics(ctx)
-			} else {
-				return
-			}
-		case <-ctx.Done():
-			return
-		}
-
-	}
 }
 
 func (s *Service) IsHealthy() bool {

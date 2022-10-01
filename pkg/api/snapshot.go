@@ -1,59 +1,56 @@
 package api
 
-import "time"
+import (
+	"bytes"
+	"encoding/gob"
+	"time"
+)
 
 type Snapshot struct {
-	Pk       int      `json:"-" storm:"id,increment"`
-	Time     int64    `json:"time"`
-	Status   *Status  `json:"status"`
-	Entities Entities `json:"entities"`
+	Pk       int            `json:"-"`
+	Time     int64          `json:"time"`
+	Host     string         `json:"host"`
+	System   *System        `json:"system"`
+	Entities *EntitiesGroup `json:"entities"`
 }
 
 func NewSnapshot() *Snapshot {
 	return &Snapshot{
 		Pk:       0,
-		Time:     time.Now().UTC().Unix(),
-		Status:   nil,
+		Time:     time.Now().UTC().UnixMilli(),
 		Entities: nil,
 	}
 }
 
-func (s *Snapshot) SetStatus(value *Status) *Snapshot {
-	s.Status = value
-	return s
-}
-
-func (s *Snapshot) SetEntities(value Entities) *Snapshot {
+func (s *Snapshot) SetEntities(value *EntitiesGroup) *Snapshot {
 	s.Entities = value
 	return s
 }
-
-type Entities map[string]map[string]*Entity
-
-func NewEntities() Entities {
-	return map[string]map[string]*Entity{}
+func (s *Snapshot) SetSystem(value *System) *Snapshot {
+	s.System = value
+	return s
 }
-
-func (e Entities) GetEntity(family, name string) (*Entity, bool) {
-	enFamily, ok := e[family]
-	if ok {
-		en, found := enFamily[name]
-		return en, found
+func (s *Snapshot) ToBinary() ([]byte, error) {
+	var buf bytes.Buffer
+	enc := gob.NewEncoder(&buf)
+	err := enc.Encode(s)
+	if err != nil {
+		return nil, err
 	}
-	return nil, ok
+	return buf.Bytes(), nil
 }
-
-func (e Entities) GetFamily(family string) (map[string]*Entity, bool) {
-	enFamily, ok := e[family]
-	return enFamily, ok
-}
-func (e Entities) AddEntity(family string, entity *Entity) {
-	enFamily, ok := e[family]
-	if ok {
-		enFamily[entity.Name] = entity
-	} else {
-		enFamily = map[string]*Entity{}
-		enFamily[entity.Name] = entity
+func SnapshotFromBinary(data []byte) (*Snapshot, error) {
+	s := &Snapshot{}
+	buf := bytes.NewBuffer(data)
+	dec := gob.NewDecoder(buf)
+	err := dec.Decode(s)
+	if err != nil {
+		return nil, err
 	}
-	e[family] = enFamily
+	return s, nil
+}
+func (s *Snapshot) Clone() *Snapshot {
+	data, _ := s.ToBinary()
+	newSnapshot, _ := SnapshotFromBinary(data)
+	return newSnapshot
 }

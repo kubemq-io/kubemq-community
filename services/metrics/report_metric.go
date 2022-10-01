@@ -17,6 +17,8 @@ const (
 	reportTypeReceiveStreamQueueMessage
 	reportTypeClients
 	reportTypePending
+	reportTypeExpired
+	reportTypeDelayed
 	reportTypeQueueUpstreamRequest
 )
 
@@ -101,7 +103,6 @@ func ReportResponse(response *pb.Response, err error) {
 func ReportSendQueueMessage(msg *pb.QueueMessage, res *pb.SendQueueMessageResult) {
 
 	if exporter != nil {
-
 		if msg == nil || res == nil {
 			exporter.metricsDropped.Inc()
 			return
@@ -183,6 +184,31 @@ func ReportPending(pattern, clientId, channel string, value float64) {
 			exporter.insertReport(&reportMetric{
 				reportType: reportTypePending,
 				params:     []interface{}{pattern, clientId, channel, value},
+			})
+		}
+	}
+}
+
+func ReportDelayed(channel string, value float64) {
+	if exporter != nil {
+		if channel == "" {
+			exporter.metricsDropped.Inc()
+		} else {
+			exporter.insertReport(&reportMetric{
+				reportType: reportTypeDelayed,
+				params:     []interface{}{channel, value},
+			})
+		}
+	}
+}
+func ReportExpired(channel string, value float64) {
+	if exporter != nil {
+		if channel == "" {
+			exporter.metricsDropped.Inc()
+		} else {
+			exporter.insertReport(&reportMetric{
+				reportType: reportTypeExpired,
+				params:     []interface{}{channel, value},
 			})
 		}
 	}

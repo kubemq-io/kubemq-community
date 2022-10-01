@@ -1,0 +1,31 @@
+POST http://localhost:8080/api/request
+Content-Type: application/json
+
+{
+    "type": "send_queue_message",
+    "data": {
+        "messageId": "queues",
+        "channel": "q",
+        "clientId": "admin",
+        "body":  "asdasd",
+       "metadata": "some metadata",
+        "tags": "key1:value1,key2:value2"
+    }
+}
+
+###
+POST http://localhost:8080/api/request
+Content-Type: application/json
+
+{
+  "type": "send_pubsub_message",
+  "data": {
+    "messageId": "pubsub",
+    "channel": "es",
+    "clientId": "admin",
+    "body":  "asdasd",
+    "metadata": "some metadata",
+    "tags": "key1:value1,key2:value2",
+    "isEvents": false
+  }
+}

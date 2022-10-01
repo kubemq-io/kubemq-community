@@ -59,14 +59,16 @@ func (ch *channels) toQueues(chType string) *Queues {
 			}
 			if q.FirstSequence <= q.LastSequence {
 				for _, sub := range item.Subscriptions {
-					c := &Client{
-						ClientId:         sub.ClientID,
-						Active:           !sub.IsOffline,
-						LastSequenceSent: sub.LastSent,
-						IsStalled:        sub.IsStalled,
-						Pending:          sub.PendingCount,
+					if sub.QueueName != "" {
+						c := &Client{
+							ClientId:         sub.ClientID,
+							Active:           !sub.IsOffline,
+							LastSequenceSent: sub.LastSent,
+							IsStalled:        sub.IsStalled,
+							Pending:          sub.PendingCount,
+						}
+						q.clients = append(q.clients, c)
 					}
-					q.clients = append(q.clients, c)
 				}
 				q.Calc()
 				queues.Sent += q.Sent
@@ -103,12 +105,21 @@ func (q *Queue) Calc() {
 		return
 	}
 	q.Subscribers = len(q.clients)
+	maxSequenceSent := int64(0)
+	pendingCount := int64(0)
+
 	for _, c := range q.clients {
-		q.Waiting += q.LastSequence - c.LastSequenceSent
+		if c.LastSequenceSent <= q.LastSequence {
+			pendingCount += c.Pending
+		}
+		if c.LastSequenceSent > maxSequenceSent {
+			maxSequenceSent = c.LastSequenceSent
+		}
 		if c.LastSequenceSent >= q.FirstSequence {
 			q.Delivered += c.LastSequenceSent - q.FirstSequence + 1
 		}
 	}
+	q.Waiting = pendingCount + q.LastSequence - maxSequenceSent
 }
 
 type Client struct {

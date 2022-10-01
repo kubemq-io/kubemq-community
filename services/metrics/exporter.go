@@ -40,14 +40,17 @@ func GetExporter() *Exporter {
 }
 
 type Exporter struct {
-	messagesCollector *promCounterMetric
-	pendingCollector  *promGaugeMetric
-	volumeCollector   *promCounterMetric
-	clientsCollector  *promGaugeMetric
-	errorsCollector   *promCounterMetric
-	reportMetricCh    chan *reportMetric
-	metricsDropped    *atomic.Uint64
-	lastUpdate        *atomic.Int64
+	messagesCollector   *promCounterMetric
+	pendingCollector    *promGaugeMetric
+	volumeCollector     *promCounterMetric
+	clientsCollector    *promGaugeMetric
+	errorsCollector     *promCounterMetric
+	lastSeenCollector   *promGaugeMetric
+	delayedCollector    *promGaugeMetric
+	expirationCollector *promCounterMetric
+	reportMetricCh      chan *reportMetric
+	metricsDropped      *atomic.Uint64
+	lastUpdate          *atomic.Int64
 }
 
 func LastUpdate() time.Time {
@@ -175,6 +178,24 @@ func (e *Exporter) initPromMetrics() bool {
 		"counts errors per node,type,side,channel",
 		labels...,
 	)
+	e.lastSeenCollector = newPromGaugeMetric(
+		"messages",
+		"last_seen",
+		"time of last seen message per node,type,side,channel",
+		labels...,
+	)
+	e.delayedCollector = newPromGaugeMetric(
+		"messages",
+		"delayed",
+		"counts how many messages are delayed per node,type,side,channel",
+		labels...,
+	)
+	e.expirationCollector = newPromCounterMetric(
+		"messages",
+		"expired",
+		"counts how many messages are expired per node,type,side,channel",
+		labels...,
+	)
 
 	err := prometheus.Register(e.messagesCollector.metric)
 	if err != nil {
@@ -189,6 +210,18 @@ func (e *Exporter) initPromMetrics() bool {
 		return false
 	}
 	err = prometheus.Register(e.errorsCollector.metric)
+	if err != nil {
+		return false
+	}
+	err = prometheus.Register(e.lastSeenCollector.metric)
+	if err != nil {
+		return false
+	}
+	err = prometheus.Register(e.delayedCollector.metric)
+	if err != nil {
+		return false
+	}
+	err = prometheus.Register(e.expirationCollector.metric)
 	if err != nil {
 		return false
 	}
@@ -221,6 +254,7 @@ func (e *Exporter) reportEvent(event *pb.Event, res *pb.Result) {
 	} else {
 		lbls = getLabels("events", event.ClientID, "send", event.Channel)
 	}
+	e.lastSeenCollector.set(float64(time.Now().UTC().UnixMilli()), lbls)
 	if res != nil {
 		if res.Sent {
 			e.messagesCollector.inc(lbls)
@@ -238,7 +272,7 @@ func (e *Exporter) reportEventReceive(event *pb.EventReceive, subReq *pb.Subscri
 	} else {
 		lbls = getLabels("events", subReq.ClientID, "receive", event.Channel)
 	}
-
+	e.lastSeenCollector.set(float64(time.Now().UTC().UnixMilli()), lbls)
 	e.messagesCollector.inc(lbls)
 	e.volumeCollector.add(float64(event.Size()), lbls)
 
@@ -259,6 +293,7 @@ func (e *Exporter) reportRequest(request *pb.Request, response *pb.Response, err
 		side = "receive"
 	}
 	lbls = getLabels(reqType, request.ClientID, side, request.Channel)
+	e.lastSeenCollector.set(float64(time.Now().UTC().UnixMilli()), lbls)
 	e.messagesCollector.inc(lbls)
 	volume := request.Size()
 	e.volumeCollector.add(float64(volume), lbls)
@@ -275,6 +310,7 @@ func (e *Exporter) reportRequest(request *pb.Request, response *pb.Response, err
 }
 func (e *Exporter) reportResponse(response *pb.Response, err error) {
 	lbls := getLabels("responses", response.ClientID, "send", "")
+	e.lastSeenCollector.set(float64(time.Now().UTC().UnixMilli()), lbls)
 	if err != nil {
 		e.errorsCollector.inc(lbls)
 	}
@@ -282,6 +318,7 @@ func (e *Exporter) reportResponse(response *pb.Response, err error) {
 
 func (e *Exporter) reportSendQueueMessage(message *pb.QueueMessage, res *pb.SendQueueMessageResult) {
 	lbls := getLabels("queues", message.ClientID, "send", message.Channel)
+	e.lastSeenCollector.set(float64(time.Now().UTC().UnixMilli()), lbls)
 	if !res.IsError {
 		e.messagesCollector.inc(lbls)
 		e.volumeCollector.add(float64(message.Size()), lbls)
@@ -295,6 +332,7 @@ func (e *Exporter) reportSendQueueMessageBatch(batch *pb.QueueMessagesBatchReque
 		message := batch.Messages[i]
 		res := results.Results[i]
 		lbls := getLabels("queues", message.ClientID, "send", message.Channel)
+		e.lastSeenCollector.set(float64(time.Now().UTC().UnixMilli()), lbls)
 		if !res.IsError {
 			e.messagesCollector.inc(lbls)
 			e.volumeCollector.add(float64(message.Size()), lbls)
@@ -308,6 +346,7 @@ func (e *Exporter) reportQueueUpstreamRequest(request *pb.QueuesUpstreamRequest)
 	for i := 0; i < len(request.Messages); i++ {
 		message := request.Messages[i]
 		lbls := getLabels("queues", message.ClientID, "send", message.Channel)
+		e.lastSeenCollector.set(float64(time.Now().UTC().UnixMilli()), lbls)
 		e.messagesCollector.inc(lbls)
 		e.volumeCollector.add(float64(message.Size()), lbls)
 	}
@@ -316,6 +355,7 @@ func (e *Exporter) reportReceiveQueueMessages(request *pb.ReceiveQueueMessagesRe
 	for i := 0; i < len(res.Messages); i++ {
 		message := res.Messages[i]
 		lbls := getLabels("queues", request.ClientID, "receive", message.Channel)
+		e.lastSeenCollector.set(float64(time.Now().UTC().UnixMilli()), lbls)
 		if !res.IsError {
 			e.messagesCollector.inc(lbls)
 			e.volumeCollector.add(float64(message.Size()), lbls)
@@ -328,18 +368,32 @@ func (e *Exporter) reportReceiveQueueMessages(request *pb.ReceiveQueueMessagesRe
 
 func (e *Exporter) reportReceiveStreamQueueMessage(message *pb.QueueMessage) {
 	lbls := getLabels("queues", message.ClientID, "receive", message.Channel)
+	e.lastSeenCollector.set(float64(time.Now().UTC().UnixMilli()), lbls)
 	e.messagesCollector.inc(lbls)
 	e.volumeCollector.add(float64(message.Size()), lbls)
 
 }
 func (e *Exporter) reportClient(pattern, side, channel string, value float64) {
 	lbls := getLabels(pattern, "", side, channel)
+	e.lastSeenCollector.set(float64(time.Now().UTC().UnixMilli()), lbls)
 	e.clientsCollector.add(value, lbls)
 }
 
 func (e *Exporter) reportPending(pattern, clientId, channel string, value float64) {
 	lbls := getLabels(pattern, clientId, "receive", channel)
+	e.lastSeenCollector.set(float64(time.Now().UTC().UnixMilli()), lbls)
 	e.pendingCollector.set(value, lbls)
+}
+func (e *Exporter) reportExpired(channel string, value float64) {
+	lbls := getLabels("queues", "", "send", channel)
+	e.lastSeenCollector.set(float64(time.Now().UTC().UnixMilli()), lbls)
+	e.expirationCollector.add(value, lbls)
+}
+
+func (e *Exporter) reportDelayed(channel string, value float64) {
+	lbls := getLabels("queues", "", "send", channel)
+	e.lastSeenCollector.set(float64(time.Now().UTC().UnixMilli()), lbls)
+	e.delayedCollector.add(value, lbls)
 }
 
 func (e *Exporter) insertReport(metric *reportMetric) {
@@ -419,6 +473,15 @@ func (e *Exporter) processMetric(metric *reportMetric) {
 		channel, _ := metric.params[2].(string)
 		value, _ := metric.params[3].(float64)
 		e.reportPending(pattern, clientId, channel, value)
+	case reportTypeExpired:
+		channel := metric.params[0].(string)
+		value := metric.params[1].(float64)
+		e.reportExpired(channel, value)
+	case reportTypeDelayed:
+		channel := metric.params[0].(string)
+		value := metric.params[1].(float64)
+		e.reportDelayed(channel, value)
 	}
+
 	e.lastUpdate.Store(time.Now().UTC().UnixNano())
 }

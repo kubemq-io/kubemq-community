@@ -2,11 +2,19 @@ package api
 
 import (
 	"math"
+	"os"
 	"runtime"
 	"time"
 )
 
+func getHostname() string {
+	host, _ := os.Hostname()
+	return host
+}
+
 type System struct {
+	Hostname                string  `json:"hostname"`
+	Version                 string  `json:"version"`
 	ProcessMemory           float64 `json:"process_memory"`
 	ProcessMemoryAllocation float64 `json:"process_memory_allocation"`
 	GoRoutines              int64   `json:"go_routines"`
@@ -21,10 +29,14 @@ type System struct {
 
 func NewSystem() *System {
 	return &System{
+		Hostname:  getHostname(),
 		TotalCPUs: runtime.NumCPU(),
 	}
 }
-
+func (s *System) SetVersion(value string) *System {
+	s.Version = value
+	return s
+}
 func (s *System) SetProcessMemory(value float64) *System {
 	s.ProcessMemory = math.Round((value)*100) / 100
 	return s

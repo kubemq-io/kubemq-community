@@ -36,12 +36,12 @@ archives:
   #    format_overrides:
   #      - goos: windows
   #        format: zip
-  - replacements:
-    id: zip
-    name_template: "{{ .Binary }}-{{ .Os }}-{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
-    format: zip
-    files:
-      - none*
+#  - replacements:
+#    id: zip
+#    name_template: "{{ .Binary }}-{{ .Os }}-{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
+#    format: zip
+#    files:
+#      - none*
 checksum:
   name_template: 'checksums.txt'
 snapshot:

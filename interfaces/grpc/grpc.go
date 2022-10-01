@@ -357,7 +357,10 @@ func (s *Server) SendQueueMessagesBatch(ctx context.Context, batchRequest *pb.Qu
 		s.logger.Errorw("error on send batch of queue messages", "error", err)
 		return nil, err
 	}
-	metrics.ReportSendQueueMessageBatch(batchRequest, batchResponse)
+	if len(batchRequest.Messages) > 0 {
+		metrics.ReportClient("queues", "receive", batchRequest.Messages[0].Channel, 1)
+		metrics.ReportSendQueueMessageBatch(batchRequest, batchResponse)
+	}
 	return batchResponse, nil
 }
 
@@ -365,10 +368,13 @@ func (s *Server) ReceiveQueueMessages(ctx context.Context, request *pb.ReceiveQu
 	var response *pb.ReceiveQueueMessagesResponse
 	var err error
 	response, err = s.services.Array.ReceiveQueueMessages(ctx, request)
-	metrics.ReportReceiveQueueMessages(request, response)
 	if err != nil {
 		return nil, err
 	}
+	if !response.IsError {
+		metrics.ReportClient("queues", "receive", request.Channel, 1)
+	}
+	metrics.ReportReceiveQueueMessages(request, response)
 	return response, nil
 }
 

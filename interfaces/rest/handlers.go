@@ -3,7 +3,6 @@ package rest
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"github.com/kubemq-io/kubemq-community/pkg/entities"
 	"github.com/kubemq-io/kubemq-community/services/metrics"
 	"net/http"
@@ -475,7 +474,6 @@ func (s *Server) handlerStreamQueueMessages(c echo.Context) error {
 	doneCh := make(chan bool, 1)
 	subID, err := s.services.Array.StreamQueueMessage(ctx, reqCh, messagesResponsesCh, doneCh)
 	if err != nil {
-
 		return status.Error(codes.Internal, err.Error())
 	}
 	defer func() {
@@ -503,7 +501,6 @@ func (s *Server) handlerStreamQueueMessages(c echo.Context) error {
 				select {
 				case reqCh <- messagesRequest:
 				case <-ctx.Done():
-					fmt.Println("ctx on read")
 					return
 				}
 

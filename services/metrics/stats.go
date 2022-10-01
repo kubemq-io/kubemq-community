@@ -71,5 +71,14 @@ func (s *Stats) Kind() string {
 	if strings.Contains(s.Name, "messages_pending") {
 		return "messages_pending"
 	}
+	if strings.Contains(s.Name, "messages_expired") {
+		return "messages_expired"
+	}
+	if strings.Contains(s.Name, "messages_delayed") {
+		return "messages_delayed"
+	}
+	if strings.Contains(s.Name, "last_seen") {
+		return "last_seen"
+	}
 	return ""
 }

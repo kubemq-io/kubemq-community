@@ -1,0 +1,11 @@
+POST http://localhost:8080/api/request
+Content-Type: application/json
+
+{
+    "type": "purge_queue_channel",
+    "data": {
+        "channel": "a"
+    }
+}
+
+###

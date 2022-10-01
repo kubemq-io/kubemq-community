@@ -235,14 +235,13 @@ func (t *Transport) String() string {
 		if err != nil {
 			return "error parsing object"
 		}
-		data, err := json.Marshal(qm)
+		data, err := json.MarshalIndent(qm, "", "\t")
 		if err != nil {
 			return "error parsing object"
 		}
 		return string(data)
 	default:
 		return entities.ErrInvalidTransportObject.Error()
-
 	}
 
 }

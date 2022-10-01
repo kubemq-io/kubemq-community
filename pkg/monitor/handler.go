@@ -148,9 +148,17 @@ func MonitorHandlerFunc(ctx context.Context, c echo.Context) error {
 			return err
 		case tr := <-transportCh:
 			if tr.Error == nil {
-				txChan <- jsonPrettyPrint(tr.String())
+				buffer, err := TransformToDtoString(tr)
+				if err != nil {
+					logger.Errorw("error on transform to string", "error", err.Error())
+				} else {
+					txChan <- buffer
+				}
+			} else {
+				txChan <- tr.String()
 			}
 			tr.Finish()
+
 		case <-c.Request().Context().Done():
 			logger.Debugw("wab socket session ended", "channel", monitorRequest.Channel, "kind", monitorRequest.Kind, "max_size", monitorRequest.MaxBodySize)
 			cancel()

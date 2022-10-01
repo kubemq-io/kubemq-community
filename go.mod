@@ -6,6 +6,7 @@ require (
 	github.com/AlecAivazis/survey/v2 v2.3.4
 	github.com/BurntSushi/toml v1.1.0
 	github.com/casbin/casbin/v2 v2.44.0
+	github.com/dustin/go-humanize v1.0.0
 	github.com/fortytw2/leaktest v1.3.0
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-resty/resty/v2 v2.7.0
@@ -15,7 +16,7 @@ require (
 	github.com/kubemq-io/broker v1.5.0
 	github.com/kubemq-io/kubemq-go v1.7.6
 	github.com/kubemq-io/protobuf v1.3.1
-	github.com/labstack/echo/v4 v4.7.2
+	github.com/labstack/echo/v4 v4.9.0
 	github.com/labstack/gommon v0.3.1
 	github.com/nats-io/nuid v1.0.1
 	github.com/pkg/errors v0.9.1
@@ -25,6 +26,7 @@ require (
 	github.com/spf13/cobra v1.4.0
 	github.com/spf13/viper v1.11.0
 	github.com/stretchr/testify v1.7.1
+	go.etcd.io/bbolt v1.3.5
 	go.uber.org/atomic v1.9.0
 	go.uber.org/zap v1.21.0
 	google.golang.org/grpc v1.45.0
@@ -72,7 +74,6 @@ require (
 	github.com/subosito/gotenv v1.2.0 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.1 // indirect
-	go.etcd.io/bbolt v1.3.5 // indirect
 	go.opencensus.io v0.23.0 // indirect
 	go.uber.org/multierr v1.6.0 // indirect
 	golang.org/x/crypto v0.0.0-20220411220226-7b82a4e95df4 // indirect

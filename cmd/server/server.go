@@ -62,6 +62,7 @@ func (o *Options) Run(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+	logger.Infof("KubeMQ Web interface is available at http://localhost:%d", o.cfg.Api.Port)
 	<-gracefulShutdown
 	logger.Warnw("kubemq server shutdown started")
 	if ifcs != nil {
