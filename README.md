@@ -11,7 +11,7 @@ KubeMQ Community is the open-source version of KubeMQ, the Kubernetes native mes
 Browse to [http://localhost:8080/](http://localhost:8080/) after installation and use the KubeMQ Web Interface to manage KubeMQ broker instance.
 
 
-![](D:\Development\bitbucket\go\projects\kubemq\products\kubemq-community\images\dashboard.png "KubeMQ Dashboard")
+![](https://github.com/kubemq-io/kubemq-community/blob/7ae66097831b1c21121cea706d7f9112b77b74d8/images/dashboard.png "KubeMQ Dashboard")
 
 
 
