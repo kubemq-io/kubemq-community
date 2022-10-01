@@ -1,1 +1,0 @@
-import{P as r}from"./entry.c95b333b.js";function f(){const o=r();return{showSuccess:(s,e)=>{o.add({severity:"success",summary:s,detail:e,life:3e3})},showInfo:(s,e)=>{o.add({severity:"info",summary:s,detail:e,life:3e3})},showWarn:(s,e)=>{o.add({severity:"warn",summary:s,detail:e,life:3e3})},showError:(s,e)=>{o.add({severity:"error",summary:s,detail:e,life:5e3})}}}export{f as u};
