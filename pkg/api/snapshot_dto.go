@@ -3,6 +3,7 @@ package api
 import (
 	"fmt"
 	"github.com/dustin/go-humanize"
+	"github.com/kubemq-io/kubemq-community/config"
 	"sort"
 	"time"
 )
@@ -24,26 +25,37 @@ type SnapshotDTO struct {
 	Queues            *FamilyDTO       `json:"queues"`
 	Pubsub            *FamilyDTO       `json:"pubsub"`
 	CommandsQueries   *FamilyDTO       `json:"commandsQueries"`
+	IsCluster         bool             `json:"isCluster"`
+	Node              string           `json:"node"`
 	inBaseValues      *BaseValues
 	outBaseValues     *BaseValues
 }
 
-func newSnapshot(system *System) *SnapshotDTO {
+func newSnapshot(systems []*System) *SnapshotDTO {
+	var hostsInfo []*HostInfoDTO
+	for _, system := range systems {
+		hostsInfo = append(hostsInfo, NewHostInfoDTO(system))
+	}
+	sort.Slice(hostsInfo, func(i, j int) bool {
+		return hostsInfo[i].Host < hostsInfo[j].Host
+	})
 	return &SnapshotDTO{
-		HostsInfo:       []*HostInfoDTO{NewHostInfoDTO(system)},
+		HostsInfo:       hostsInfo,
 		StatsCards:      NewStatCardDTOs(),
 		Queues:          newFamilyDTO("queues"),
 		Pubsub:          newFamilyDTO("pubsub"),
 		CommandsQueries: newFamilyDTO("commandsQueries"),
 		inBaseValues:    NewBaseValues(),
 		outBaseValues:   NewBaseValues(),
+		IsCluster:       false,
+		Node:            config.GetHostname(),
 	}
 }
-func NewSnapshotDTO(system *System, entitiesGroup *EntitiesGroup) *SnapshotDTO {
-	group := newSnapshot(system)
-	queueFamily, ok := entitiesGroup.GetFamily("queues")
+func NewSnapshotDTO(systems []*System, channelsEntitiesGroup *EntitiesGroup, clientsEntitiesGroup *EntitiesGroup) *SnapshotDTO {
+	group := newSnapshot(systems)
+	queueFamily, ok := channelsEntitiesGroup.GetFamily("queues")
 	if ok {
-		group.Queues = NewFamilyDTO(queueFamily)
+		group.Queues = NewFamilyDTO(queueFamily, clientsEntitiesGroup)
 		group.inBaseValues.Add(group.Queues.inBaseValues)
 		group.outBaseValues.Add(group.Queues.outBaseValues)
 		group.Channels += group.Queues.Channels
@@ -54,14 +66,14 @@ func NewSnapshotDTO(system *System, entitiesGroup *EntitiesGroup) *SnapshotDTO {
 		}
 	}
 
-	eventsFamily, ok := entitiesGroup.GetFamily("events")
+	eventsFamily, ok := channelsEntitiesGroup.GetFamily("events")
 	if ok {
-		group.Pubsub = NewFamilyDTO(eventsFamily)
+		group.Pubsub = NewFamilyDTO(eventsFamily, clientsEntitiesGroup)
 
 	}
-	eventsStoreFamily, ok := entitiesGroup.GetFamily("events_store")
+	eventsStoreFamily, ok := channelsEntitiesGroup.GetFamily("events_store")
 	if ok {
-		group.Pubsub.Add(NewFamilyDTO(eventsStoreFamily))
+		group.Pubsub.Add(NewFamilyDTO(eventsStoreFamily, clientsEntitiesGroup))
 	}
 	group.inBaseValues.Add(group.Pubsub.inBaseValues)
 	group.outBaseValues.Add(group.Pubsub.outBaseValues)
@@ -73,14 +85,14 @@ func NewSnapshotDTO(system *System, entitiesGroup *EntitiesGroup) *SnapshotDTO {
 	}
 	group.Pubsub.Name = "pubsub"
 
-	commandsFamily, ok := entitiesGroup.GetFamily("commands")
+	commandsFamily, ok := channelsEntitiesGroup.GetFamily("commands")
 	if ok {
-		group.CommandsQueries = NewFamilyDTO(commandsFamily)
+		group.CommandsQueries = NewFamilyDTO(commandsFamily, clientsEntitiesGroup)
 	}
 
-	queriesFamily, ok := entitiesGroup.GetFamily("queries")
+	queriesFamily, ok := channelsEntitiesGroup.GetFamily("queries")
 	if ok {
-		group.CommandsQueries.Add(NewFamilyDTO(queriesFamily))
+		group.CommandsQueries.Add(NewFamilyDTO(queriesFamily, clientsEntitiesGroup))
 
 	}
 	group.inBaseValues.Add(group.CommandsQueries.inBaseValues)

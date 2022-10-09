@@ -37,6 +37,16 @@ func (e *EntitiesFamily) List() []*Entity {
 	})
 	return list
 }
+func (e *EntitiesFamily) GetActiveEntitiesCount() int {
+	active := 0
+	for _, en := range e.Entities {
+
+		if en.IsActive() {
+			active++
+		}
+	}
+	return active
+}
 
 func (e *EntitiesFamily) ToBinary() ([]byte, error) {
 	var buf bytes.Buffer

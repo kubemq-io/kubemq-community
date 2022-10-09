@@ -17,22 +17,18 @@ func NewClient() *Client {
 }
 
 func (c *Client) Init(ctx context.Context, localPort int) error {
-	//host, err := os.Hostname()
-	//if err != nil {
-	//	return err
-	//}
 	var err error
 	c.client, err = sdk.NewClient(ctx,
 		sdk.WithAddress("0.0.0.0", localPort),
 		sdk.WithTransportType(sdk.TransportTypeGRPC),
-		sdk.WithClientId("kubemq-admin-client"))
+		sdk.WithClientId("kubemq-web-client"))
 	if err != nil {
 		return err
 	}
 	c.streamClient, err = sdk.NewQueuesStreamClient(ctx,
 		sdk.WithAddress("0.0.0.0", localPort),
 		sdk.WithTransportType(sdk.TransportTypeGRPC),
-		sdk.WithClientId("kubemq-admin-client"))
+		sdk.WithClientId("kubemq-web-client"))
 	if err != nil {
 		return err
 	}

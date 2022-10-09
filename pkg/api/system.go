@@ -25,6 +25,8 @@ type System struct {
 	Uptime                  float64 `json:"uptime"`
 	CPUUtilization          float64 `json:"cpu_utilization"`
 	MemoryUtilization       float64 `json:"memory_utilization"`
+	UpdatedAt               int64   `json:"updatedAt"`
+	ActiveClients           int     `json:"activeClients"`
 }
 
 func NewSystem() *System {
@@ -79,5 +81,15 @@ func (s *System) Calc() *System {
 	s.Uptime = float64(time.Now().Unix()) - s.StartTime
 	memUtilL := (s.ProcessMemoryAllocation / s.ProcessMemory) * 100
 	s.MemoryUtilization = math.Round(memUtilL*100) / 100
+	return s
+}
+
+func (s *System) SetUpdatedAt(value int64) *System {
+	s.UpdatedAt = value
+	return s
+}
+
+func (s *System) SetActiveClients(value int) *System {
+	s.ActiveClients = value
 	return s
 }

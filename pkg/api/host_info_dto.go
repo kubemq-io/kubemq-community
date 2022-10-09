@@ -19,13 +19,14 @@ type HostInfoDTO struct {
 	OsThreads         int64   `json:"osThreads"`
 	CpuCores          int     `json:"cpuCores"`
 	CpuUtilization    float64 `json:"cpuUtilization"`
+	ActiveClients     int     `json:"activeClients"`
 }
 
 func NewHostInfoDTO(system *System) *HostInfoDTO {
 	return &HostInfoDTO{
 		Host:              system.Hostname,
 		Version:           system.Version,
-		LastUpdate:        time.Now().Format("2006-01-02 15:04:05"),
+		LastUpdate:        time.UnixMilli(system.UpdatedAt).Format("2006-01-02 15:04:05"),
 		Status:            "Running",
 		Role:              "Standalone",
 		Uptime:            (time.Duration(system.Uptime) * time.Second).String(),
@@ -35,5 +36,6 @@ func NewHostInfoDTO(system *System) *HostInfoDTO {
 		OsThreads:         system.OSThreads,
 		CpuCores:          system.TotalCPUs,
 		CpuUtilization:    system.CPUUtilization,
+		ActiveClients:     system.ActiveClients,
 	}
 }

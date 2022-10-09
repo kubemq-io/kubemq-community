@@ -1,6 +1,7 @@
 package metrics
 
 import (
+	"fmt"
 	"github.com/kubemq-io/kubemq-community/config"
 	"github.com/kubemq-io/kubemq-community/pkg/api"
 
@@ -11,9 +12,9 @@ import (
 func getSnapshot(mf []*Family) *api.Snapshot {
 	snapshot := api.NewSnapshot()
 	system, stats := parseFamily(mf)
-	entities := makeEntities(stats)
+	channelsEntities, clientsEntities := makeEntities(stats)
 	snapshot.SetSystem(system)
-	snapshot.SetEntities(entities)
+	snapshot.SetChannelEntities(channelsEntities).SetClientsEntities(clientsEntities)
 	return snapshot
 }
 
@@ -65,35 +66,51 @@ func parseFamily(mf []*Family) (*api.System, []*Stats) {
 	return si, list
 }
 
-func makeEntities(st []*Stats) *api.EntitiesGroup {
-	entitiesGroup := api.NewEntitiesGroup()
+func makeEntities(st []*Stats) (*api.EntitiesGroup, *api.EntitiesGroup) {
+	channelsEntitiesGroup := api.NewEntitiesGroup()
+	clientsEntitiesGroup := api.NewEntitiesGroup()
 	for _, item := range st {
-		family := item.Type
-		name := item.Channel
+		channelType := item.Type
+		channelName := item.Channel
+		clientIdName := item.ClientId
 
-		entity, _ := entitiesGroup.GetEntity(family, name)
-		if entity == nil {
-			entity = api.NewEntity(family, name)
-			entitiesGroup.AddEntity(family, entity)
+		channelEntity, _ := channelsEntitiesGroup.GetEntity(channelType, channelName)
+		if channelEntity == nil {
+			channelEntity = api.NewEntity(channelType, channelName)
+			channelsEntitiesGroup.AddEntity(channelType, channelEntity)
+		}
+
+		clientEntity, _ := clientsEntitiesGroup.GetEntity(fmt.Sprintf("%s/%s", channelType, channelName), clientIdName)
+		if clientEntity == nil {
+			clientEntity = api.NewEntity(fmt.Sprintf("%s/%s", channelType, channelName), clientIdName)
+			clientsEntitiesGroup.AddEntity(fmt.Sprintf("%s/%s", channelType, channelName), clientEntity)
 		}
 		switch item.Kind() {
 		case "messages_count":
-			entity.SetValues(item.Side, "messages", int64(item.Float64()))
+			channelEntity.SetValues(item.Side, "messages", int64(item.Float64()))
+			clientEntity.SetValues(item.Side, "messages", int64(item.Float64()))
 		case "messages_volume":
-			entity.SetValues(item.Side, "volume", int64(item.Float64()))
+			channelEntity.SetValues(item.Side, "volume", int64(item.Float64()))
+			clientEntity.SetValues(item.Side, "volume", int64(item.Float64()))
 		case "errors_count":
-			entity.SetValues(item.Side, "errors", int64(item.Float64()))
+			channelEntity.SetValues(item.Side, "errors", int64(item.Float64()))
+			clientEntity.SetValues(item.Side, "errors", int64(item.Float64()))
 		case "messages_expired":
-			entity.SetValues(item.Side, "expired", int64(item.Float64()))
+			channelEntity.SetValues(item.Side, "expired", int64(item.Float64()))
+			clientEntity.SetValues(item.Side, "expired", int64(item.Float64()))
 		case "messages_delayed":
-			entity.SetValues(item.Side, "delayed", int64(item.Float64()))
+			channelEntity.SetValues(item.Side, "delayed", int64(item.Float64()))
+			clientEntity.SetValues(item.Side, "delayed", int64(item.Float64()))
 		case "last_seen":
-			entity.SetValues(item.Side, "last_seen", int64(item.Float64()))
+			channelEntity.SetValues(item.Side, "last_seen", int64(item.Float64()))
+			clientEntity.SetValues(item.Side, "last_seen", int64(item.Float64()))
 		}
-		entity.SetClient(item.Side, item.ClientId)
+		channelEntity.SetClient(item.Side, item.ClientId)
+
 	}
-	entitiesGroup.ReCalcLastSeen()
-	return entitiesGroup
+	channelsEntitiesGroup.ReCalcLastSeen()
+	clientsEntitiesGroup.ReCalcLastSeen()
+	return channelsEntitiesGroup, clientsEntitiesGroup
 }
 
 func getInt64Value(metrics []interface{}) int64 {

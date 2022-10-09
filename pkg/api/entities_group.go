@@ -30,7 +30,14 @@ func (e *EntitiesGroup) GetEntity(family, name string) (*Entity, bool) {
 	}
 	return nil, ok
 }
+func (e *EntitiesGroup) GetActiveEntitiesCount() int {
+	active := 0
+	for _, en := range e.Families {
 
+		active += en.GetActiveEntitiesCount()
+	}
+	return active
+}
 func (e *EntitiesGroup) GetFamily(family string) (*EntitiesFamily, bool) {
 	enFamily, ok := e.Families[family]
 	return enFamily, ok

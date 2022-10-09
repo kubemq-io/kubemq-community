@@ -1,6 +1,8 @@
 package api
 
 import (
+	"bytes"
+	"encoding/gob"
 	"fmt"
 	bolt "go.etcd.io/bbolt"
 	"os"
@@ -22,7 +24,7 @@ func (d *DB) Init(path string) error {
 			return err
 		}
 	}
-	db, err := bolt.Open(path+"/kubemq.db", 0600, &bolt.Options{Timeout: 1 * time.Second})
+	db, err := bolt.Open(path+"/kubemq.db", 0755, &bolt.Options{Timeout: 1 * time.Second})
 	if err != nil {
 		return err
 	}
@@ -46,38 +48,42 @@ func (d *DB) Close() error {
 	return d.db.Close()
 }
 
-func (d *DB) SaveEntitiesGroup(group *EntitiesGroup) error {
+func (d *DB) SaveEntitiesGroups(ts int64, groups map[string]*EntitiesGroup) error {
+	var buf bytes.Buffer
+	enc := gob.NewEncoder(&buf)
+	if err := enc.Encode(groups); err != nil {
+		return err
+	}
+
 	return d.db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte("entities"))
-		data, err := group.ToBinary()
-		if err != nil {
-			return err
-		}
-		return b.Put([]byte(group.Key()), data)
+		return b.Put([]byte(time.UnixMilli(ts).Format(time.RFC3339)), buf.Bytes())
 	})
 }
-func (d *DB) SaveLastEntitiesGroup(group *EntitiesGroup) error {
+func (d *DB) SaveLastEntitiesGroup(groups map[string]*EntitiesGroup) error {
+	var buf bytes.Buffer
+	enc := gob.NewEncoder(&buf)
+	if err := enc.Encode(groups); err != nil {
+		return err
+	}
 	return d.db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte("entities"))
-		data, err := group.ToBinary()
-		if err != nil {
-			return err
-		}
-		return b.Put([]byte("__last__"), data)
+		return b.Put([]byte("__last__"), buf.Bytes())
 	})
 }
 
-func (d *DB) GetLastEntities() (*EntitiesGroup, error) {
-	var group *EntitiesGroup
+func (d *DB) GetLastEntities() (map[string]*EntitiesGroup, error) {
+	var groups map[string]*EntitiesGroup
 	err := d.db.View(func(tx *bolt.Tx) error {
 		bucket := tx.Bucket([]byte("entities"))
 		val := bucket.Get([]byte("__last__"))
 		if val == nil {
 			return fmt.Errorf("last entities not found")
 		}
-		var err error
-		group, err = EntitiesGroupFromBinary(val)
-		if err != nil {
+
+		buf := bytes.NewBuffer(val)
+		dec := gob.NewDecoder(buf)
+		if err := dec.Decode(&groups); err != nil {
 			return err
 		}
 		return nil
@@ -85,5 +91,5 @@ func (d *DB) GetLastEntities() (*EntitiesGroup, error) {
 	if err != nil {
 		return nil, err
 	}
-	return group, nil
+	return groups, nil
 }

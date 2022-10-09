@@ -31,22 +31,19 @@ var (
 func ToPlainJson(v interface{}) ([]byte, error) {
 	return json.Marshal(v)
 }
-func FromPlainJson(data []byte, v interface{}) error {
-	return json.Unmarshal(data, v)
-}
 
 const saveInterval = time.Second * 5
 
 type service struct {
 	sync.Mutex
-	appConfig               *config.Config
-	broker                  *broker.Service
-	metricsExporter         *metrics.Exporter
-	lastSnapshot            *api.Snapshot
-	db                      *api.DB
-	logger                  *logging.Logger
-	lastLoadedEntitiesGroup *api.EntitiesGroup
-	actionClient            *actions.Client
+	appConfig                *config.Config
+	broker                   *broker.Service
+	metricsExporter          *metrics.Exporter
+	lastSnapshot             *api.Snapshot
+	db                       *api.DB
+	logger                   *logging.Logger
+	lastLoadedEntitiesGroups map[string]*api.EntitiesGroup
+	actionClient             *actions.Client
 }
 
 func newService(appConfig *config.Config, broker *broker.Service, exp *metrics.Exporter) *service {
@@ -65,10 +62,12 @@ func (s *service) init(ctx context.Context, logger *logging.Logger) error {
 		return fmt.Errorf("error initializing api db: %s", err.Error())
 	}
 	var err error
-	s.lastLoadedEntitiesGroup, err = s.db.GetLastEntities()
+	s.lastLoadedEntitiesGroups, err = s.db.GetLastEntities()
 	if err != nil {
 		s.logger.Errorf("error getting last entities data from local db: %s", err.Error())
-		s.lastLoadedEntitiesGroup = api.NewEntitiesGroup()
+		s.lastLoadedEntitiesGroups = make(map[string]*api.EntitiesGroup)
+		s.lastLoadedEntitiesGroups["channels"] = api.NewEntitiesGroup()
+		s.lastLoadedEntitiesGroups["clients"] = api.NewEntitiesGroup()
 	}
 	s.actionClient = actions.NewClient()
 	err = s.actionClient.Init(ctx, s.appConfig.Grpc.Port)
@@ -103,7 +102,7 @@ func (s *service) saveEntitiesGroup(ctx context.Context) {
 		s.logger.Errorf("error getting snapshot: %s", err.Error())
 		return
 	}
-	if err := s.db.SaveEntitiesGroup(currentSnapshot.Entities); err != nil {
+	if err := s.db.SaveEntitiesGroups(currentSnapshot.Time, currentSnapshot.Entities); err != nil {
 		s.logger.Errorf("error saving entities group: %s", err.Error())
 		return
 	}
@@ -122,10 +121,11 @@ func (s *service) getCurrentSnapshot(ctx context.Context) (*api.Snapshot, error)
 	if err != nil {
 		return nil, err
 	}
-	ss.Entities = s.lastLoadedEntitiesGroup.Clone().Merge(ss.Entities)
+	ss.Entities["channels"] = s.lastLoadedEntitiesGroups["channels"].Clone().Merge(ss.Entities["channels"])
+	ss.Entities["clients"] = s.lastLoadedEntitiesGroups["clients"].Clone().Merge(ss.Entities["clients"])
 
 	// clean queue entities waiting messages count
-	queueGroup, ok := ss.Entities.Families["queues"]
+	queueGroup, ok := ss.Entities["channels"].Families["queues"]
 	if ok {
 		for _, entity := range queueGroup.Entities {
 			entity.Out.Waiting = 0
@@ -137,7 +137,7 @@ func (s *service) getCurrentSnapshot(ctx context.Context) (*api.Snapshot, error)
 		return nil, err
 	}
 	for _, queue := range q.Queues {
-		en, ok := ss.Entities.GetEntity("queues", queue.Name)
+		en, ok := ss.Entities["channels"].GetEntity("queues", queue.Name)
 		if ok {
 			en.Out.Waiting = queue.Waiting
 		}
@@ -147,6 +147,8 @@ func (s *service) getCurrentSnapshot(ctx context.Context) (*api.Snapshot, error)
 	} else {
 		ss.System.SetCPUUtilization(s.lastSnapshot.System.Uptime, s.lastSnapshot.System.TotalCPUSeconds)
 	}
+	ss.System.SetActiveClients(ss.Entities["clients"].GetActiveEntitiesCount())
+	ss.System.SetUpdatedAt(ss.Time)
 	s.lastSnapshot = ss
 	return ss, nil
 }
@@ -160,9 +162,11 @@ func (s *service) getSnapshot(c echo.Context) error {
 		}
 	}
 	s.Lock()
-	groupDTO := api.NewSnapshotDTO(s.lastSnapshot.System, s.lastSnapshot.Entities)
+	channelsEntities := s.lastSnapshot.Entities["channels"]
+	clientsEntities := s.lastSnapshot.Entities["clients"]
+	snapshotDTO := api.NewSnapshotDTO([]*api.System{s.lastSnapshot.System}, channelsEntities, clientsEntities)
 	s.Unlock()
-	return res.SetResponseBody(groupDTO).Send()
+	return res.SetResponseBody(snapshotDTO).Send()
 }
 
 func (s *service) handleRequests(c echo.Context) error {
@@ -268,8 +272,10 @@ func (s *service) handlerConnectionStatus(c echo.Context) error {
 			if s.lastSnapshot == nil {
 				continue
 			}
-			snapshot := api.NewSnapshotDTO(s.lastSnapshot.System, s.lastSnapshot.Entities)
-			if err := conn.WriteJSON(snapshot); err != nil {
+			channelsEntities := s.lastSnapshot.Entities["channels"]
+			clientsEntities := s.lastSnapshot.Entities["clients"]
+			snapshotDTO := api.NewSnapshotDTO([]*api.System{s.lastSnapshot.System}, channelsEntities, clientsEntities)
+			if err := conn.WriteJSON(snapshotDTO); err != nil {
 				return nil
 			}
 		}

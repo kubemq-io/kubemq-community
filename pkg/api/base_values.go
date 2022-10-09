@@ -58,8 +58,10 @@ func (b *BaseValues) SetDelayed(value int64) *BaseValues {
 }
 
 func (b *BaseValues) AddClient(value string) *BaseValues {
-	b.ClientMap[value] = value
-	b.Clients = int64(len(b.ClientMap))
+	if value != "" {
+		b.ClientMap[value] = value
+		b.Clients = int64(len(b.ClientMap))
+	}
 	return b
 }
 

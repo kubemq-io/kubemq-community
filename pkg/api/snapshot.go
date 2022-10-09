@@ -3,27 +3,33 @@ package api
 import (
 	"bytes"
 	"encoding/gob"
+	"github.com/kubemq-io/kubemq-community/config"
 	"time"
 )
 
 type Snapshot struct {
-	Pk       int            `json:"-"`
-	Time     int64          `json:"time"`
-	Host     string         `json:"host"`
-	System   *System        `json:"system"`
-	Entities *EntitiesGroup `json:"entities"`
+	Pk       int                       `json:"-"`
+	Time     int64                     `json:"time"`
+	Host     string                    `json:"host"`
+	System   *System                   `json:"system"`
+	Entities map[string]*EntitiesGroup `json:"entities"`
 }
 
 func NewSnapshot() *Snapshot {
 	return &Snapshot{
 		Pk:       0,
 		Time:     time.Now().UTC().UnixMilli(),
-		Entities: nil,
+		Entities: map[string]*EntitiesGroup{},
+		Host:     config.GetHostname(),
 	}
 }
 
-func (s *Snapshot) SetEntities(value *EntitiesGroup) *Snapshot {
-	s.Entities = value
+func (s *Snapshot) SetChannelEntities(value *EntitiesGroup) *Snapshot {
+	s.Entities["channels"] = value
+	return s
+}
+func (s *Snapshot) SetClientsEntities(value *EntitiesGroup) *Snapshot {
+	s.Entities["clients"] = value
 	return s
 }
 func (s *Snapshot) SetSystem(value *System) *Snapshot {

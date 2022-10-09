@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"github.com/dustin/go-humanize"
 	"sort"
 	"time"
@@ -44,10 +45,11 @@ func newFamilyDTO(name string) *FamilyDTO {
 		outBaseValues:     NewBaseValues(),
 	}
 }
-func NewFamilyDTO(family *EntitiesFamily) *FamilyDTO {
+func NewFamilyDTO(family *EntitiesFamily, clientsEntitiesGroup *EntitiesGroup) *FamilyDTO {
 	f := newFamilyDTO(family.Name)
 	for _, channel := range family.Entities {
-		channelDTO := NewChannelDTO(family.Name, channel.Name, channel)
+		clientEntities, _ := clientsEntitiesGroup.GetFamily(fmt.Sprintf("%s/%s", family.Name, channel.Name))
+		channelDTO := NewChannelDTO(family.Name, channel.Name, channel, clientEntities)
 		f.inBaseValues.Add(channel.In)
 		f.outBaseValues.Add(channel.Out)
 		if channelDTO.LastActivity > f.LastActivity {
