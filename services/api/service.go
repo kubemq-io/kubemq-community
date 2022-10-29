@@ -102,10 +102,6 @@ func (s *service) saveEntitiesGroup(ctx context.Context) {
 		s.logger.Errorf("error getting snapshot: %s", err.Error())
 		return
 	}
-	if err := s.db.SaveEntitiesGroups(currentSnapshot.Time, currentSnapshot.Entities); err != nil {
-		s.logger.Errorf("error saving entities group: %s", err.Error())
-		return
-	}
 	if err := s.db.SaveLastEntitiesGroup(currentSnapshot.Entities); err != nil {
 		s.logger.Errorf("error saving last entities group: %s", err.Error())
 		return

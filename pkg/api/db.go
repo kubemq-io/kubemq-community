@@ -48,18 +48,6 @@ func (d *DB) Close() error {
 	return d.db.Close()
 }
 
-func (d *DB) SaveEntitiesGroups(ts int64, groups map[string]*EntitiesGroup) error {
-	var buf bytes.Buffer
-	enc := gob.NewEncoder(&buf)
-	if err := enc.Encode(groups); err != nil {
-		return err
-	}
-
-	return d.db.Update(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte("entities"))
-		return b.Put([]byte(time.UnixMilli(ts).Format(time.RFC3339)), buf.Bytes())
-	})
-}
 func (d *DB) SaveLastEntitiesGroup(groups map[string]*EntitiesGroup) error {
 	var buf bytes.Buffer
 	enc := gob.NewEncoder(&buf)
