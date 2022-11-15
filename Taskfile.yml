@@ -4,7 +4,7 @@ version: '3'
 
 vars:
   BINARY_NAME: kubemq
-  VERSION: v2.3.4
+  VERSION: v2.3.5
 
 tasks:
   check_update:
@@ -32,7 +32,12 @@ tasks:
     cmds:
       - docker build --build-arg VERSION={{.VERSION}} . -t kubemq/{{.BINARY_NAME}}-community:{{.VERSION}}
       - docker tag kubemq/{{.BINARY_NAME}}-community:{{.VERSION}} kubemq/{{.BINARY_NAME}}-community:latest
+  docker_push:
+    cmds:
+      - docker push kubemq/{{.BINARY_NAME}}-community:{{.VERSION}}
+      - docker push kubemq/{{.BINARY_NAME}}-community:latest
   release:
     cmds:
-      - git tag -a {{.VERSION}} -m {{.VERSION}}
-      - git push origin master --tags
+      - task: docker
+      - task: docker_push
+      - task: goreleaser
