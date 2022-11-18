@@ -78,14 +78,14 @@ func NewServer(svc *services.SystemServices, appConfig *config.Config) (s *Serve
 	return s, err
 }
 
-//func (s *Server) watch() {
-//	for {
-//		select {
-//		case <-time.After(5 * time.Second):
-//			fmt.Printf("Counter1: %d, Counter2: %d\n", client.Counter1.Load(), client.Counter2.Load())
+//	func (s *Server) watch() {
+//		for {
+//			select {
+//			case <-time.After(5 * time.Second):
+//				fmt.Printf("Counter1: %d, Counter2: %d\n", client.Counter1.Load(), client.Counter2.Load())
+//			}
 //		}
 //	}
-//}
 func (s *Server) QueuesInfo(ctx context.Context, request *pb.QueuesInfoRequest) (*pb.QueuesInfoResponse, error) {
 	results, err := s.services.Broker.GetQueues(ctx)
 	if err != nil {
@@ -143,7 +143,6 @@ func (s *Server) SendEvent(ctx context.Context, event *pb.Event) (*pb.Result, er
 	} else {
 		result, err = s.services.Array.SendEvents(ctx, event)
 	}
-	metrics.ReportEvent(event, result)
 	if err != nil {
 		s.logger.Errorw("error on send event", "error", err)
 		return nil, status.Error(codes.Internal, err.Error())
@@ -177,7 +176,6 @@ func (s *Server) SendEventsStream(stream pb.Kubemq_SendEventsStreamServer) error
 				s.logger.Errorw("error on send result", "error", err)
 				return status.Error(codes.Internal, err.Error())
 			}
-			metrics.ReportEvent(event, result)
 		} else {
 			result, sendErr = s.services.Array.SendEvents(stream.Context(), event)
 			// sending result only if there is an error
@@ -193,7 +191,6 @@ func (s *Server) SendEventsStream(stream pb.Kubemq_SendEventsStreamServer) error
 					return status.Error(codes.Internal, err.Error())
 				}
 			}
-			metrics.ReportEvent(event, result)
 		}
 
 	}
@@ -344,7 +341,6 @@ func (s *Server) SendQueueMessage(ctx context.Context, msg *pb.QueueMessage) (*p
 		s.logger.Errorw("error on send queue message", "error", err)
 		return nil, err
 	}
-	metrics.ReportSendQueueMessage(msg, result)
 	return result, nil
 
 }

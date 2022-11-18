@@ -3,6 +3,7 @@ package array
 import (
 	"fmt"
 	"github.com/kubemq-io/kubemq-community/pkg/entities"
+	"github.com/kubemq-io/kubemq-community/services/metrics"
 	"math/rand"
 
 	"github.com/kubemq-io/kubemq-community/services/authorization"
@@ -540,6 +541,7 @@ func (a *Array) sendEvents(ctx context.Context, msg *pb.Event) (*pb.Result, erro
 		return nil, err
 	}
 	result, err := a.eventSender.SendEvents(ctx, msg)
+	metrics.ReportEvent(msg, result)
 	return result, err
 }
 
@@ -558,8 +560,8 @@ func (a *Array) sendEventsStore(ctx context.Context, msg *pb.Event) (*pb.Result,
 	if err := a.Authorize(msg); err != nil {
 		return nil, err
 	}
-
 	result, err := a.eventsStoreSender.SendEventsStore(ctx, msg)
+	metrics.ReportEvent(msg, result)
 	return result, err
 }
 func (a *Array) SendQuery(ctx context.Context, req *pb.Request) (*pb.Response, error) {
@@ -618,6 +620,7 @@ func (a *Array) sendQueueMessage(ctx context.Context, msg *pb.QueueMessage) (*pb
 	}
 	defer a.queueClientsPool.ReleaseClient(msg.Channel + "-sender")
 	res := ChainQueueSenders(nc, QueueSenderLogging(a.logger)).SendQueueMessage(ctx, msg)
+	metrics.ReportSendQueueMessage(msg, res)
 	return res, nil
 }
 

@@ -55,7 +55,6 @@ func (s *Server) handlerSendMessage(c echo.Context) error {
 	} else {
 		result, err = s.services.Array.SendEvents(ctx, event)
 	}
-	metrics.ReportEvent(event, result)
 	if err != nil {
 		return res.SetError(err).SetHttpCode(400).Send()
 	}
@@ -356,7 +355,6 @@ func (s *Server) handlerSendMessageStream(c echo.Context) error {
 				s.logger.Debugw("error on writing to web socket", "error", errors.Wrapf(entities.ErrOnWriteToWebSocket, errOnSend.Error()))
 				return nil
 			}
-			metrics.ReportEvent(event, result)
 		} else {
 			s.logger.Error(entities.ErrInvalidWebSocketMessageType)
 			continue
@@ -409,7 +407,6 @@ func (s *Server) handlerSendQueueMessage(c echo.Context) error {
 	}
 	var result *pb.SendQueueMessageResult
 	result, err = s.services.Array.SendQueueMessage(ctx, msg)
-	metrics.ReportSendQueueMessage(msg, result)
 	if err != nil {
 		return res.SetError(err).SetHttpCode(400).Send()
 	}

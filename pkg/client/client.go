@@ -410,9 +410,6 @@ func (c *Client) SubscribeToCommands(ctx context.Context, subReq *pb.Subscribe, 
 		err := req.Unmarshal(r.Data)
 		if err == nil {
 			req.ReplyChannel = r.Reply
-			req.CacheKey = ""
-			req.CacheTTL = 0
-			req.Timeout = 0
 			select {
 			case <-ctx.Done():
 				return
@@ -444,9 +441,6 @@ func (c *Client) SubscribeToQueries(ctx context.Context, subReq *pb.Subscribe, r
 		err := req.Unmarshal(r.Data)
 		if err == nil {
 			req.ReplyChannel = r.Reply
-			req.CacheKey = ""
-			req.CacheTTL = 0
-			req.Timeout = 0
 			select {
 			case <-ctx.Done():
 				return
