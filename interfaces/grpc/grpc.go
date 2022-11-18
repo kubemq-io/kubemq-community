@@ -2,6 +2,7 @@ package grpc
 
 import (
 	"context"
+	"fmt"
 	"github.com/kubemq-io/kubemq-community/config"
 	"github.com/kubemq-io/kubemq-community/pkg/entities"
 	"github.com/kubemq-io/kubemq-community/services/metrics"
@@ -346,6 +347,12 @@ func (s *Server) SendQueueMessage(ctx context.Context, msg *pb.QueueMessage) (*p
 }
 
 func (s *Server) SendQueueMessagesBatch(ctx context.Context, batchRequest *pb.QueueMessagesBatchRequest) (*pb.QueueMessagesBatchResponse, error) {
+	if len(batchRequest.Messages) == 0 {
+		return nil, fmt.Errorf("empty messages batch")
+	}
+	reportChannel := batchRequest.Messages[0].Channel
+	metrics.ReportClient("queues", "send", reportChannel, 1)
+	defer metrics.ReportClient("queues", "send", reportChannel, -1)
 	var batchResponse *pb.QueueMessagesBatchResponse
 	var err error
 	batchResponse, err = s.services.Array.SendQueueMessagesBatch(ctx, batchRequest)
@@ -353,27 +360,25 @@ func (s *Server) SendQueueMessagesBatch(ctx context.Context, batchRequest *pb.Qu
 		s.logger.Errorw("error on send batch of queue messages", "error", err)
 		return nil, err
 	}
-	if len(batchRequest.Messages) > 0 {
-		metrics.ReportClient("queues", "receive", batchRequest.Messages[0].Channel, 1)
-	}
 	return batchResponse, nil
 }
 
 func (s *Server) ReceiveQueueMessages(ctx context.Context, request *pb.ReceiveQueueMessagesRequest) (*pb.ReceiveQueueMessagesResponse, error) {
+	metrics.ReportClient("queues", "receive", request.Channel, 1)
+	defer metrics.ReportClient("queues", "receive", request.Channel, -1)
 	var response *pb.ReceiveQueueMessagesResponse
 	var err error
 	response, err = s.services.Array.ReceiveQueueMessages(ctx, request)
 	if err != nil {
 		return nil, err
 	}
-	if !response.IsError {
-		metrics.ReportClient("queues", "receive", request.Channel, 1)
-	}
 	metrics.ReportReceiveQueueMessages(request, response)
 	return response, nil
 }
 
 func (s *Server) StreamQueueMessage(stream pb.Kubemq_StreamQueueMessageServer) error {
+	metrics.ReportClient("queues", "receive", "StreamQueueMessageUnknown", 1)
+	defer metrics.ReportClient("queues", "receive", "StreamQueueMessageUnknown", -1)
 	ctx, cancel := context.WithCancel(stream.Context())
 	defer func() {
 		cancel()
@@ -428,6 +433,8 @@ func (s *Server) StreamQueueMessage(stream pb.Kubemq_StreamQueueMessageServer) e
 	}
 }
 func (s *Server) QueuesUpstream(stream pb.Kubemq_QueuesUpstreamServer) error {
+	metrics.ReportClient("queues", "send", "QueuesUpstreamUnknown", 1)
+	defer metrics.ReportClient("queues", "send", "QueuesUpstreamUnknown", -1)
 	ctx, cancel := context.WithCancel(stream.Context())
 	defer func() {
 		cancel()
@@ -475,6 +482,8 @@ func (s *Server) QueuesUpstream(stream pb.Kubemq_QueuesUpstreamServer) error {
 }
 
 func (s *Server) QueuesDownstream(stream pb.Kubemq_QueuesDownstreamServer) error {
+	metrics.ReportClient("queues", "receive", "QueuesDownstreamUnknown", 1)
+	defer metrics.ReportClient("queues", "receive", "QueuesDownstreamUnknown", -1)
 	ctx, cancel := context.WithCancel(stream.Context())
 	defer func() {
 		cancel()
@@ -538,6 +547,8 @@ func (s *Server) Ping(ctx context.Context, req *pb.Empty) (*pb.PingResult, error
 }
 
 func (s *Server) AckAllQueueMessages(ctx context.Context, request *pb.AckAllQueueMessagesRequest) (*pb.AckAllQueueMessagesResponse, error) {
+	metrics.ReportClient("queues", "receive", request.Channel, 1)
+	defer metrics.ReportClient("queues", "receive", request.Channel, -1)
 	response, err := s.services.Array.AckAllQueueMessages(ctx, request)
 	if err != nil {
 		return nil, err
