@@ -48,7 +48,7 @@ func Start(ctx context.Context, appConfig *config.Config) (*SystemServices, erro
 	metrics.InitExporter(s.ctx)
 
 	s.Broker = broker.New(appConfig)
-	s.Api, err = api.CreateApiServer(s.ctx, s.Broker)
+	s.Api, err = api.CreateApiServer(s.ctx, s.Broker, appConfig)
 	if err != nil {
 		return nil, errors.Wrapf(entities.ErrOnLoadingService, "service: %s, error: %s", "api service", err.Error())
 	}
@@ -103,6 +103,9 @@ start:
 	s.Array, err = array.Start(s.ctx, appConfig)
 	if err != nil {
 		return nil, errors.Wrapf(entities.ErrOnLoadingService, "service: %s, error: %s", "array service", err.Error())
+	}
+	if err := s.Api.InitApiService(ctx, s.Array); err != nil {
+		s.logger.Errorf("error on loading api service: %s", err.Error())
 	}
 	return s, nil
 }

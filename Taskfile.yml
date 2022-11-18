@@ -19,7 +19,7 @@ tasks:
       - kubemq.exe server
   goreleaser:
     env:
-      VERSION: v2.3.4
+      VERSION: v2.3.5
     cmds:
       - goreleaser --snapshot --skip-publish --rm-dist
   rundocker:

@@ -5,15 +5,22 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/kubemq-io/kubemq-community/pkg/api/actions"
-	sdk "github.com/kubemq-io/kubemq-go"
+	"github.com/kubemq-io/kubemq-community/services/metrics"
+	pb "github.com/kubemq-io/protobuf/go"
+	"time"
 )
 
-func createQueueChannel(ctx context.Context, client *sdk.Client, name string) error {
-	rec, err := client.RQM().
-		SetChannel(name).
-		SetMaxNumberOfMessages(1).
-		SetWaitTimeSeconds(1).
-		Send(ctx)
+func createQueueChannelWithInternalClient(ctx context.Context, client *InternalClient, name string) error {
+	metrics.ReportClient("queues", "receive", name, 1)
+	defer metrics.ReportClient("queues", "receive", name, -1)
+	rec, err := client.arrayService.ReceiveQueueMessages(ctx, &pb.ReceiveQueueMessagesRequest{
+		RequestID:           "",
+		ClientID:            client.clientID,
+		Channel:             name,
+		MaxNumberOfMessages: 1,
+		WaitTimeSeconds:     1,
+		IsPeak:              true,
+	})
 	if err != nil {
 		return err
 	}
@@ -22,24 +29,27 @@ func createQueueChannel(ctx context.Context, client *sdk.Client, name string) er
 	}
 	return nil
 }
-func sendQueueMessage(ctx context.Context, client *sdk.Client, message *actions.SendQueueMessageRequest) (*actions.SendQueueMessageResponse, error) {
-
+func sendQueueMessageWithInternalClient(ctx context.Context, client *InternalClient, message *actions.SendQueueMessageRequest) (*actions.SendQueueMessageResponse, error) {
 	body, _, err := detectAndConvertToBytesArray(message.Body)
 	if err != nil {
 		return nil, err
 	}
-	res, err := client.QM().
-		SetChannel(message.Channel).
-		SetBody(body).
-		SetId(message.MessageId).
-		SetMetadata(message.Metadata).
-		SetTags(message.TagsKeyValue()).
-		SetPolicyMaxReceiveCount(message.MaxReceiveCount).
-		SetPolicyMaxReceiveQueue(message.MaxReceiveQueue).
-		SetPolicyExpirationSeconds(message.ExpirationAt).
-		SetPolicyDelaySeconds(message.DelayedTo).
-		Send(ctx)
-
+	msg := &pb.QueueMessage{
+		MessageID:  message.MessageId,
+		ClientID:   client.clientID,
+		Channel:    message.Channel,
+		Metadata:   message.Metadata,
+		Body:       body,
+		Tags:       message.TagsKeyValue(),
+		Attributes: nil,
+		Policy: &pb.QueueMessagePolicy{
+			ExpirationSeconds: int32(message.ExpirationAt),
+			DelaySeconds:      int32(message.DelayedTo),
+			MaxReceiveCount:   int32(message.MaxReceiveCount),
+			MaxReceiveQueue:   message.MaxReceiveQueue,
+		},
+	}
+	res, err := client.arrayService.SendQueueMessage(ctx, msg)
 	if err != nil {
 		return nil, err
 	}
@@ -54,13 +64,17 @@ func sendQueueMessage(ctx context.Context, client *sdk.Client, message *actions.
 		SetDelayedTo(res.DelayedTo), nil
 
 }
-func receiveQueueMessages(ctx context.Context, client *sdk.Client, actionReq *actions.ReceiveQueueMessagesRequest) ([]*actions.ReceiveQueueMessageResponse, error) {
-	res, err := client.RQM().
-		SetChannel(actionReq.Channel).
-		SetIsPeak(actionReq.IsPeek).
-		SetMaxNumberOfMessages(actionReq.Count).
-		SetWaitTimeSeconds(1).
-		Send(ctx)
+
+func receiveQueueMessagesWithInternalClient(ctx context.Context, client *InternalClient, actionReq *actions.ReceiveQueueMessagesRequest) ([]*actions.ReceiveQueueMessageResponse, error) {
+	req := &pb.ReceiveQueueMessagesRequest{
+		RequestID:           "",
+		ClientID:            client.clientID,
+		Channel:             actionReq.Channel,
+		MaxNumberOfMessages: int32(actionReq.Count),
+		WaitTimeSeconds:     1,
+		IsPeak:              actionReq.IsPeek,
+	}
+	res, err := client.arrayService.ReceiveQueueMessages(ctx, req)
 
 	if err != nil {
 		return nil, err
@@ -69,7 +83,7 @@ func receiveQueueMessages(ctx context.Context, client *sdk.Client, actionReq *ac
 	if res.IsError {
 		return nil, fmt.Errorf("error receiving queue messages, error: %s", res.Error)
 	}
-
+	metrics.ReportReceiveQueueMessages(req, res)
 	var messages []*actions.ReceiveQueueMessageResponse
 	for _, message := range res.Messages {
 		queueMessage := actions.NewReceiveQueueMessageResponse().
@@ -90,16 +104,19 @@ func receiveQueueMessages(ctx context.Context, client *sdk.Client, actionReq *ac
 		}
 		messages = append(messages, queueMessage)
 	}
-
 	return messages, nil
-
 }
-func purgeQueueChannel(ctx context.Context, client *sdk.Client, actionReq *actions.PurgeQueueChannelRequest) (*actions.PurgeQueueChannelResponse, error) {
-	res, err := client.AQM().
-		SetChannel(actionReq.Channel).
-		SetWaitTimeSeconds(2).
-		Send(ctx)
 
+func purgeQueueChannelWithInternalClient(ctx context.Context, client *InternalClient, actionReq *actions.PurgeQueueChannelRequest) (*actions.PurgeQueueChannelResponse, error) {
+	res, err := client.arrayService.AckAllQueueMessages(ctx, &pb.AckAllQueueMessagesRequest{
+		RequestID:            "",
+		ClientID:             client.clientID,
+		Channel:              actionReq.Channel,
+		WaitTimeSeconds:      2,
+		XXX_NoUnkeyedLiteral: struct{}{},
+		XXX_unrecognized:     nil,
+		XXX_sizecache:        0,
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -111,20 +128,24 @@ func purgeQueueChannel(ctx context.Context, client *sdk.Client, actionReq *actio
 		SetCount(res.AffectedMessages), nil
 }
 
-func streamQueueMessages(ctx context.Context, streamClient *sdk.QueuesClient, requests chan *actions.StreamQueueMessagesRequest, responses chan *actions.StreamQueueMessagesResponse) {
-	var currentResponse *sdk.QueueTransactionMessageResponse
-	var doneChan chan struct{}
+func streamQueueMessagesWithInternalClient(ctx context.Context, streamClient *InternalClient, requests chan *actions.StreamQueueMessagesRequest, responses chan *actions.StreamQueueMessagesResponse) {
+	messagesRequestsCh := make(chan *pb.QueuesDownstreamRequest, 1)
+	messagesResponsesCh := make(chan *pb.QueuesDownstreamResponse, 1)
+	doneCh := make(chan bool, 1)
+	err := streamClient.arrayService.QueuesDownstream(ctx, messagesRequestsCh, messagesResponsesCh, doneCh)
+	if err != nil {
+		responses <- actions.NewStreamQueueMessageResponse().SetError(err)
+		return
+	}
 	defer func() {
-		if doneChan != nil {
-			doneChan <- struct{}{}
-		}
+		doneCh <- true
 	}()
+
+	var currentResponse *pb.QueuesDownstreamResponse
+
 	for {
 		select {
 		case <-ctx.Done():
-			if doneChan != nil {
-				doneChan <- struct{}{}
-			}
 			return
 		case request := <-requests:
 			switch request.RequestType {
@@ -135,65 +156,94 @@ func streamQueueMessages(ctx context.Context, streamClient *sdk.QueuesClient, re
 						SetError(fmt.Errorf("error polling queue messages, previous request is not finished yet"))
 					continue
 				}
-				tx, err := streamClient.Transaction(ctx,
-					sdk.NewQueueTransactionMessageRequest().
-						SetChannel(request.Channel).
-						SetVisibilitySeconds(request.VisibilitySeconds).
-						SetWaitTimeSeconds(request.WaitSeconds))
-				if err != nil {
-					responses <- actions.NewStreamQueueMessageResponse().
-						SetRequestType(request.RequestType).
-						SetError(err)
-					continue
+				req := &pb.QueuesDownstreamRequest{
+					RequestID:       "",
+					ClientID:        streamClient.clientID,
+					RequestTypeData: pb.QueuesDownstreamRequestType_Get,
+					Channel:         request.Channel,
+					MaxItems:        1,
+					WaitTimeout:     3600 * 1000,
 				}
-				if tx.Message != nil {
-					queueMessage := actions.NewReceiveQueueMessageResponse().
-						SetMessageId(tx.Message.MessageID).
-						SetBody(detectAndConvertToAny(tx.Message.Body)).
-						SetMetadata(tx.Message.Metadata).
-						SetClientId(tx.Message.ClientID).
-						SetDelayedTo(tx.Message.Attributes.DelayedTo).
-						SetExpirationAt(tx.Message.Attributes.ExpirationAt).
-						SetReceivedCount(int64(tx.Message.Attributes.ReceiveCount)).
-						SetReRoutedFrom(tx.Message.Attributes.ReRoutedFromQueue).
-						SetTimestamp(tx.Message.Attributes.Timestamp).
-						SetSequence(int64(tx.Message.Attributes.Sequence))
+				select {
+				case <-ctx.Done():
+					return
+				case messagesRequestsCh <- req:
 
-					if len(tx.Message.Tags) > 0 {
-						data, _ := json.Marshal(tx.Message.Tags)
-						queueMessage.SetTags(string(data))
-					}
-					responses <- actions.NewStreamQueueMessageResponse().
-						SetRequestType(request.RequestType).
-						SetMessage(queueMessage)
-					currentResponse = tx
-				} else {
-					currentResponse = nil
 				}
-
-			case actions.AckQueueMessagesRequestType, actions.RejectQueueMessagesRequestType:
-				if currentResponse != nil {
-					if currentResponse.Message == nil {
+				select {
+				case <-ctx.Done():
+					return
+				case response := <-messagesResponsesCh:
+					if response.IsError {
 						responses <- actions.NewStreamQueueMessageResponse().
 							SetRequestType(request.RequestType).
-							SetError(fmt.Errorf("error acknowledging queue messages, no message found"))
+							SetError(fmt.Errorf(response.Error))
+						continue
 					} else {
-						var err error
-						if request.RequestType == actions.AckQueueMessagesRequestType {
-							err = currentResponse.Ack()
-						} else {
-							err = currentResponse.Reject()
+						if len(response.Messages) == 0 {
+							currentResponse = nil
+							continue
 						}
-						if err != nil {
+						currentResponse = response
+						currentMessage := response.Messages[0]
+						queueMessage := actions.NewReceiveQueueMessageResponse().
+							SetMessageId(currentMessage.MessageID).
+							SetBody(detectAndConvertToAny(currentMessage.Body)).
+							SetMetadata(currentMessage.Metadata).
+							SetClientId(currentMessage.ClientID).
+							SetDelayedTo(currentMessage.Attributes.DelayedTo).
+							SetExpirationAt(currentMessage.Attributes.ExpirationAt).
+							SetReceivedCount(int64(currentMessage.Attributes.ReceiveCount)).
+							SetReRoutedFrom(currentMessage.Attributes.ReRoutedFromQueue).
+							SetTimestamp(currentMessage.Attributes.Timestamp).
+							SetSequence(int64(currentMessage.Attributes.Sequence))
+
+						if len(currentMessage.Tags) > 0 {
+							data, _ := json.Marshal(currentMessage.Tags)
+							queueMessage.SetTags(string(data))
+						}
+						responses <- actions.NewStreamQueueMessageResponse().
+							SetRequestType(request.RequestType).
+							SetMessage(queueMessage)
+						metrics.ReportReceiveStreamQueueMessage(currentMessage)
+					}
+
+				}
+			case actions.AckQueueMessagesRequestType, actions.RejectQueueMessagesRequestType:
+				if currentResponse != nil {
+					currentMessage := currentResponse.Messages[0]
+					var reqType pb.QueuesDownstreamRequestType
+					if request.RequestType == actions.AckQueueMessagesRequestType {
+						reqType = pb.QueuesDownstreamRequestType_AckRange
+					} else {
+						reqType = pb.QueuesDownstreamRequestType_NAckRange
+					}
+					req := &pb.QueuesDownstreamRequest{
+						RequestID:        currentResponse.RefRequestId,
+						ClientID:         streamClient.clientID,
+						RequestTypeData:  reqType,
+						Channel:          currentMessage.Channel,
+						SequenceRange:    []int64{int64(currentMessage.Attributes.Sequence)},
+						RefTransactionId: currentResponse.TransactionId,
+					}
+					messagesRequestsCh <- req
+					select {
+					case <-ctx.Done():
+						return
+					case response := <-messagesResponsesCh:
+						if response.IsError {
 							responses <- actions.NewStreamQueueMessageResponse().
 								SetRequestType(request.RequestType).
-								SetError(err)
-
+								SetError(fmt.Errorf(response.Error))
+							continue
 						} else {
 							responses <- actions.NewStreamQueueMessageResponse().
 								SetRequestType(request.RequestType)
 
 						}
+					case <-time.After(200 * time.Millisecond):
+						responses <- actions.NewStreamQueueMessageResponse().
+							SetRequestType(request.RequestType)
 					}
 					currentResponse = nil
 				} else {

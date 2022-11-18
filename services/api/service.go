@@ -10,6 +10,7 @@ import (
 	actions_pkg "github.com/kubemq-io/kubemq-community/pkg/api/actions"
 	"github.com/kubemq-io/kubemq-community/pkg/logging"
 	"github.com/kubemq-io/kubemq-community/services/api/actions"
+	"github.com/kubemq-io/kubemq-community/services/array"
 	"github.com/kubemq-io/kubemq-community/services/broker"
 	"github.com/kubemq-io/kubemq-community/services/metrics"
 	"github.com/labstack/echo/v4"
@@ -43,7 +44,7 @@ type service struct {
 	db                       *api.DB
 	logger                   *logging.Logger
 	lastLoadedEntitiesGroups map[string]*api.EntitiesGroup
-	actionClient             *actions.Client
+	actionClient             *actions.InternalClient
 }
 
 func newService(appConfig *config.Config, broker *broker.Service, exp *metrics.Exporter) *service {
@@ -56,7 +57,7 @@ func newService(appConfig *config.Config, broker *broker.Service, exp *metrics.E
 	return s
 }
 
-func (s *service) init(ctx context.Context, logger *logging.Logger) error {
+func (s *service) init(ctx context.Context, logger *logging.Logger, array *array.Array) error {
 	s.logger = logger
 	if err := s.db.Init(s.appConfig.Store.StorePath); err != nil {
 		return fmt.Errorf("error initializing api db: %s", err.Error())
@@ -69,8 +70,8 @@ func (s *service) init(ctx context.Context, logger *logging.Logger) error {
 		s.lastLoadedEntitiesGroups["channels"] = api.NewEntitiesGroup()
 		s.lastLoadedEntitiesGroups["clients"] = api.NewEntitiesGroup()
 	}
-	s.actionClient = actions.NewClient()
-	err = s.actionClient.Init(ctx, s.appConfig.Grpc.Port)
+	s.actionClient = actions.NewInternalClient()
+	err = s.actionClient.Init(ctx, array, s.broker)
 	if err != nil {
 		return fmt.Errorf("error initializing actions client: %s", err.Error())
 	}
@@ -413,7 +414,6 @@ func (s *service) handlerStreamQueueMessages(c echo.Context) error {
 			goto drain
 
 		case response := <-responses:
-			fmt.Println(response.Marshal())
 			errOnSend := conn.WriteJSON(response)
 			if err != nil {
 				s.logger.Debugf("error on writing to web socket, error: %s", errOnSend.Error())

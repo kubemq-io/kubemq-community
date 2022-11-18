@@ -5,6 +5,7 @@ import (
 	"embed"
 	"encoding/json"
 	"fmt"
+	"github.com/kubemq-io/kubemq-community/services/array"
 	"github.com/kubemq-io/kubemq-community/services/broker"
 	"strings"
 
@@ -69,9 +70,6 @@ func CreateApiServer(ctx context.Context, broker *broker.Service, appConfigs ...
 		metricsExporter: metrics.GetExporter(),
 	}
 	s.apiService = newService(appConfig, broker, s.metricsExporter)
-	if err := s.apiService.init(ctx, s.logger); err != nil {
-		return nil, err
-	}
 	s.context, s.cancelFunc = context.WithCancel(ctx)
 	e := echo.New()
 	e.HideBanner = true
@@ -174,6 +172,9 @@ func CreateApiServer(ctx context.Context, broker *broker.Service, appConfigs ...
 		return nil, fmt.Errorf("error strarting api server, %w", ctx.Err())
 	}
 
+}
+func (s *Server) InitApiService(ctx context.Context, array *array.Array) error {
+	return s.apiService.init(ctx, s.logger, array)
 }
 func (s *Server) AddHealthFunc(fn func() json.RawMessage) {
 	s.healthFuncs = append(s.healthFuncs, fn)

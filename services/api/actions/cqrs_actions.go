@@ -4,52 +4,78 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/kubemq-io/kubemq-community/pkg/api/actions"
-	sdk "github.com/kubemq-io/kubemq-go"
+	"github.com/kubemq-io/kubemq-community/services/metrics"
+	pb "github.com/kubemq-io/protobuf/go"
 	"time"
 )
 
-func createCQRSChannel(ctx context.Context, client *sdk.Client, name string, isCommand bool) error {
+func createCQRSChannelWIthInternalClient(ctx context.Context, client *InternalClient, name string, isCommand bool) error {
 	newCtx, _ := context.WithTimeout(ctx, 1*time.Second)
 	errChan := make(chan error, 1)
+	var err error
+	subId := ""
+	var pattern string
 	if isCommand {
-		_, err := client.SubscribeToCommands(newCtx, name, "", errChan)
+		msgCh := make(chan *pb.Request, 1)
+		subId, err = client.arrayService.SubscribeToCommands(newCtx, &pb.Subscribe{
+			SubscribeTypeData: pb.Subscribe_Commands,
+			ClientID:          client.clientID,
+			Channel:           name,
+			Group:             "",
+		}, msgCh, errChan)
 		if err != nil {
 			return err
 		}
-
+		pattern = "commands"
 	} else {
-		_, err := client.SubscribeToQueries(newCtx, name, "", errChan)
+		msgCh := make(chan *pb.Request, 1)
+		subId, err = client.arrayService.SubscribeToQueries(newCtx, &pb.Subscribe{
+			SubscribeTypeData: pb.Subscribe_Queries,
+			ClientID:          client.clientID,
+			Channel:           name,
+			Group:             "",
+		}, msgCh, errChan)
 		if err != nil {
 			return err
 		}
+		pattern = "queries"
 	}
+	metrics.ReportClient("pattern", "receive", name, 1)
 	time.Sleep(1 * time.Second)
+	err = client.arrayService.DeleteClient(subId)
+	if err != nil {
+		return err
+	}
+	metrics.ReportClient(pattern, "receive", name, -1)
 	return nil
 }
 
-func sendCQRSMessageRequest(ctx context.Context, client *sdk.Client, message *actions.SendCQRSMessageRequest) (*actions.ReceiveCQRSResponse, error) {
-
+func sendCQRSMessageRequestWithInternalClient(ctx context.Context, client *InternalClient, message *actions.SendCQRSMessageRequest) (*actions.ReceiveCQRSResponse, error) {
 	body, _, err := detectAndConvertToBytesArray(message.Body)
 	if err != nil {
 		return nil, err
 	}
 
 	if message.IsCommands {
-		resp, err := client.C().
-			SetChannel(message.Channel).
-			SetBody(body).
-			SetId(message.RequestId).
-			SetMetadata(message.Metadata).
-			SetTags(message.TagsKeyValue()).
-			SetTimeout(time.Duration(message.Timeout) * time.Second).
-			Send(ctx)
+		req := &pb.Request{
+			RequestID:       message.RequestId,
+			RequestTypeData: pb.Request_Command,
+			ClientID:        client.clientID,
+			Channel:         message.Channel,
+			Metadata:        message.Metadata,
+			Body:            body,
+			Timeout:         int32(message.Timeout * 1000),
+			Tags:            message.TagsKeyValue(),
+		}
+		resp, err := client.arrayService.SendCommand(ctx, req)
 		if err != nil {
 			return nil, err
 		}
+		metrics.ReportRequest(req, resp, err)
 		actionResponse := actions.NewReceiveCQRSResponse().
 			SetExecuted(resp.Executed).
 			SetError(resp.Error).
-			SetTimestamp(resp.ExecutedAt.UnixMilli())
+			SetTimestamp(time.Unix(0, resp.Timestamp).UnixMilli())
 		if len(resp.Tags) > 0 {
 			data, _ := json.Marshal(resp.Tags)
 			actionResponse.SetTags(string(data))
@@ -57,23 +83,28 @@ func sendCQRSMessageRequest(ctx context.Context, client *sdk.Client, message *ac
 		return actionResponse, nil
 
 	} else {
-		resp, err := client.Q().
-			SetChannel(message.Channel).
-			SetBody(body).
-			SetId(message.RequestId).
-			SetMetadata(message.Metadata).
-			SetTags(message.TagsKeyValue()).
-			SetTimeout(time.Duration(message.Timeout) * time.Second).
-			Send(ctx)
+		req := &pb.Request{
+			RequestID:       message.RequestId,
+			RequestTypeData: pb.Request_Query,
+			ClientID:        client.clientID,
+			Channel:         message.Channel,
+			Metadata:        message.Metadata,
+			Body:            body,
+			Timeout:         int32(message.Timeout * 1000),
+			Tags:            message.TagsKeyValue(),
+		}
+
+		resp, err := client.arrayService.SendQuery(ctx, req)
 		if err != nil {
 			return nil, err
 		}
+		metrics.ReportRequest(req, resp, err)
 		actionResponse := actions.NewReceiveCQRSResponse().
 			SetBody(detectAndConvertToAny(resp.Body)).
 			SetMetadata(resp.Metadata).
 			SetExecuted(resp.Executed).
 			SetError(resp.Error).
-			SetTimestamp(resp.ExecutedAt.UnixMilli())
+			SetTimestamp(time.Unix(0, resp.Timestamp).UnixMilli())
 		if len(resp.Tags) > 0 {
 			data, _ := json.Marshal(resp.Tags)
 			actionResponse.SetTags(string(data))
@@ -84,28 +115,46 @@ func sendCQRSMessageRequest(ctx context.Context, client *sdk.Client, message *ac
 
 }
 
-func sendCQRSResponse(ctx context.Context, client *sdk.Client, resp *actions.SendCQRSMessageResponse) error {
+func sendCQRSResponseWithInternalClient(ctx context.Context, client *InternalClient, resp *actions.SendCQRSMessageResponse) error {
 	body, _, err := detectAndConvertToBytesArray(resp.Body)
 	if err != nil {
 		return err
 	}
-	return client.R().
-		SetRequestId(resp.RequestId).
-		SetBody(body).
-		SetMetadata(resp.Metadata).
-		SetTags(resp.TagsKeyValue()).
-		SetResponseTo(resp.ReplyChannel).
-		SetError(resp.GetError()).
-		SetExecutedAt(time.Now()).
-		Send(ctx)
-
+	response := &pb.Response{
+		ClientID:     client.clientID,
+		RequestID:    resp.RequestId,
+		ReplyChannel: resp.ReplyChannel,
+		Metadata:     resp.Metadata,
+		Body:         body,
+		CacheHit:     false,
+		Timestamp:    time.Now().UnixNano(),
+		Executed:     resp.Executed,
+		Error:        resp.Error,
+		Span:         nil,
+		Tags:         resp.TagsKeyValue(),
+	}
+	metrics.ReportResponse(response, err)
+	return client.arrayService.SendResponse(ctx, response)
 }
-func subscribeToCommands(ctx context.Context, client *sdk.Client, channel, group string, messagesCh chan *actions.SubscribeCQRSRequestMessage, errChan chan error) error {
-	commandsChan, err := client.SubscribeToCommands(ctx, channel, group, errChan)
+
+func subscribeToCommandsWithInternalClient(ctx context.Context, client *InternalClient, channel, group string, messagesCh chan *actions.SubscribeCQRSRequestMessage, errChan chan error) error {
+	commandsChan := make(chan *pb.Request, 1)
+	request := &pb.Subscribe{
+		SubscribeTypeData: pb.Subscribe_Commands,
+		ClientID:          client.clientID,
+		Channel:           channel,
+		Group:             group,
+	}
+	subId, err := client.arrayService.SubscribeToCommands(ctx, request, commandsChan, errChan)
 	if err != nil {
 		return err
 	}
+	metrics.ReportClient("commands", "receive", channel, 1)
 	go func() {
+		defer func() {
+			_ = client.arrayService.DeleteClient(subId)
+			metrics.ReportClient("commands", "receive", channel, -1)
+		}()
 		for {
 			select {
 			case command, ok := <-commandsChan:
@@ -120,11 +169,12 @@ func subscribeToCommands(ctx context.Context, client *sdk.Client, channel, group
 				msg.SetBody(detectAndConvertToAny(command.Body)).
 					SetMetadata(command.Metadata).
 					SetTimestamp(time.Now().UnixMilli()).
-					SetRequestId(command.Id).
+					SetRequestId(command.RequestID).
 					SetBody(detectAndConvertToAny(command.Body)).
-					SetReplyChannel(command.ResponseTo).
+					SetReplyChannel(command.ReplyChannel).
 					SetIsCommand(true)
 				messagesCh <- msg
+				metrics.ReportRequest(command, nil, nil)
 			case <-ctx.Done():
 				return
 			}
@@ -134,12 +184,24 @@ func subscribeToCommands(ctx context.Context, client *sdk.Client, channel, group
 	return nil
 }
 
-func subscribeToQueries(ctx context.Context, client *sdk.Client, channel, group string, messagesCh chan *actions.SubscribeCQRSRequestMessage, errChan chan error) error {
-	queriesChan, err := client.SubscribeToQueries(ctx, channel, group, errChan)
+func subscribeToQueriesWithInternalClient(ctx context.Context, client *InternalClient, channel, group string, messagesCh chan *actions.SubscribeCQRSRequestMessage, errChan chan error) error {
+
+	queriesChan := make(chan *pb.Request, 1)
+	subId, err := client.arrayService.SubscribeToQueries(ctx, &pb.Subscribe{
+		SubscribeTypeData: pb.Subscribe_Queries,
+		ClientID:          client.clientID,
+		Channel:           channel,
+		Group:             group,
+	}, queriesChan, errChan)
 	if err != nil {
 		return err
 	}
+	metrics.ReportClient("queries", "receive", channel, 1)
 	go func() {
+		defer func() {
+			_ = client.arrayService.DeleteClient(subId)
+			metrics.ReportClient("queries", "receive", channel, -1)
+		}()
 		for {
 			select {
 			case query, ok := <-queriesChan:
@@ -154,16 +216,16 @@ func subscribeToQueries(ctx context.Context, client *sdk.Client, channel, group 
 				msg.SetBody(detectAndConvertToAny(query.Body)).
 					SetMetadata(query.Metadata).
 					SetTimestamp(time.Now().UnixMilli()).
-					SetRequestId(query.Id).
+					SetRequestId(query.RequestID).
 					SetBody(detectAndConvertToAny(query.Body)).
-					SetReplyChannel(query.ResponseTo).
+					SetReplyChannel(query.ReplyChannel).
 					SetIsCommand(false)
 				messagesCh <- msg
+				metrics.ReportRequest(query, nil, nil)
 			case <-ctx.Done():
 				return
 			}
 		}
 	}()
-
 	return nil
 }

@@ -17,7 +17,8 @@ func TransformToDtoString(tr *Transport) (string, error) {
 
 	case "response":
 		t = NewTransportResponseMessageDto(tr)
-
+	case "response_error":
+		t = NewTransportResponseErrorMessageDto(tr)
 	case "queue":
 		t = NewTransportQueueMessageDto(tr)
 	default:
@@ -170,5 +171,24 @@ func NewTransportResponseMessageDto(tr *Transport) *TransportResponseMessageDto 
 	}
 	dto.Error = message.Error
 	dto.Executed = message.Executed
+	return dto
+}
+
+type TransportResponseErrorMessageDto struct {
+	RequestId string `json:"requestId"`
+	Error     string `json:"error,omitempty"`
+	Timestamp string `json:"timestamp,omitempty"`
+}
+
+func NewTransportResponseErrorMessageDto(tr *Transport) *TransportResponseErrorMessageDto {
+	dto := &TransportResponseErrorMessageDto{}
+	message := &ResponseError{}
+	err := tr.Unmarshal(message)
+	if err != nil {
+		return nil
+	}
+	dto.RequestId = message.RequestID
+	dto.Timestamp = time.Now().Format("2006-01-02 15:04:05")
+	dto.Error = message.Error
 	return dto
 }
