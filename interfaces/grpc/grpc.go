@@ -355,7 +355,6 @@ func (s *Server) SendQueueMessagesBatch(ctx context.Context, batchRequest *pb.Qu
 	}
 	if len(batchRequest.Messages) > 0 {
 		metrics.ReportClient("queues", "receive", batchRequest.Messages[0].Channel, 1)
-		metrics.ReportSendQueueMessageBatch(batchRequest, batchResponse)
 	}
 	return batchResponse, nil
 }

@@ -678,6 +678,8 @@ func (a *Array) sendQueueMessagesBatch(ctx context.Context, req *pb.QueueMessage
 	}
 	defer a.ReleaseQueueUpstreamClientFromPool(id)
 	res, err := ChainQueueBatchSenders(nc, QueueBatchSenderLogging(a.logger)).SendQueueMessagesBatch(ctx, req)
+	metrics.ReportSendQueueMessageBatch(req, res)
+
 	return res, err
 }
 

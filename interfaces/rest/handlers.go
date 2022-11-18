@@ -425,7 +425,6 @@ func (s *Server) handlerSendBatchQueueMessages(c echo.Context) error {
 	}
 	var batchResponse *pb.QueueMessagesBatchResponse
 	batchResponse, err = s.services.Array.SendQueueMessagesBatch(ctx, batchRequest)
-	metrics.ReportSendQueueMessageBatch(batchRequest, batchResponse)
 	if err != nil {
 		return res.SetError(err).SetHttpCode(400).Send()
 	}
