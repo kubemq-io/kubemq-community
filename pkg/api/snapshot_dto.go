@@ -99,7 +99,6 @@ func NewSnapshotDTO(systems []*System, channelsEntitiesGroup *EntitiesGroup, cli
 	group.outBaseValues.Add(group.CommandsQueries.outBaseValues)
 	group.Clients += group.CommandsQueries.Clients
 	group.ActiveChannels += group.CommandsQueries.ActiveChannels
-	group.Channels += int64(len(group.CommandsQueries.ChannelsList))
 	if group.LastActivity < group.CommandsQueries.LastActivity {
 		group.LastActivity = group.CommandsQueries.LastActivity
 	}

@@ -377,8 +377,6 @@ func (s *Server) ReceiveQueueMessages(ctx context.Context, request *pb.ReceiveQu
 }
 
 func (s *Server) StreamQueueMessage(stream pb.Kubemq_StreamQueueMessageServer) error {
-	metrics.ReportClient("queues", "receive", "StreamQueueMessageUnknown", 1)
-	defer metrics.ReportClient("queues", "receive", "StreamQueueMessageUnknown", -1)
 	ctx, cancel := context.WithCancel(stream.Context())
 	defer func() {
 		cancel()
@@ -433,8 +431,6 @@ func (s *Server) StreamQueueMessage(stream pb.Kubemq_StreamQueueMessageServer) e
 	}
 }
 func (s *Server) QueuesUpstream(stream pb.Kubemq_QueuesUpstreamServer) error {
-	metrics.ReportClient("queues", "send", "QueuesUpstreamUnknown", 1)
-	defer metrics.ReportClient("queues", "send", "QueuesUpstreamUnknown", -1)
 	ctx, cancel := context.WithCancel(stream.Context())
 	defer func() {
 		cancel()
@@ -482,8 +478,6 @@ func (s *Server) QueuesUpstream(stream pb.Kubemq_QueuesUpstreamServer) error {
 }
 
 func (s *Server) QueuesDownstream(stream pb.Kubemq_QueuesDownstreamServer) error {
-	metrics.ReportClient("queues", "receive", "QueuesDownstreamUnknown", 1)
-	defer metrics.ReportClient("queues", "receive", "QueuesDownstreamUnknown", -1)
 	ctx, cancel := context.WithCancel(stream.Context())
 	defer func() {
 		cancel()
