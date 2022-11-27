@@ -1,5 +1,5 @@
 api:
-  port: 8080
+  port: 10500
 authentication:
   config: ""
   enable: false
@@ -26,7 +26,7 @@ broker:
   writeBufferSize: 2
   writeDeadline: 2000
 client:
-  apiAddress: http://localhost:8080
+  apiAddress: http://localhost:10500
   authToken: ""
   clientId: ""
   grpcHost: localhost
