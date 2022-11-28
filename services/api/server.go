@@ -156,7 +156,26 @@ func CreateApiServer(ctx context.Context, broker *broker.Service, appConfigs ...
 
 	errCh := make(chan error, 1)
 	go func() {
-		errCh <- s.echoWebServer.Start(fmt.Sprintf("0.0.0.0:%d", appConfig.Api.Port))
+		switch appConfig.Security.Mode() {
+			case config.SecurityModeNone:
+				errCh <- s.echoWebServer.Start(fmt.Sprintf("0.0.0.0:%d", appConfig.Api.Port))				
+			case config.SecurityModeTLS, config.SecurityModeMTLS:
+				certBlock, err := appConfig.Security.Cert.Get()
+				if err != nil {
+					fmt.Errorf("secured api server not started, invalid cert data : %s", err.Error())
+				}
+				keyBlock, err := appConfig.Security.Key.Get()
+				if err != nil {
+					fmt.Errorf("secured api server not started,invalid key data: %s", err.Error())
+				}
+				s.logger.Warnw("started secured api server at port %d", appConfig.Api.Port)
+				go func() {
+					errCh <- s.echoWebServer.StartTLS(fmt.Sprintf("0.0.0.0:%d", appConfig.Api.Port), certBlock, keyBlock)
+					if err != nil {
+						s.logger.Errorf(err.Error())
+					}
+				}()
+		}
 	}()
 
 	select {
