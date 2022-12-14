@@ -8,8 +8,8 @@ ENV ADDR=0.0.0.0
 ADD . $GOPATH/github.com/kubemq-io/kubemq-community
 WORKDIR $GOPATH/github.com/kubemq-io/kubemq-community
 RUN go mod vendor
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -mod=vendor -installsuffix cgo -ldflags="-w -s -X main.version=$VERSION" -o kubemq-run .
-FROM registry.access.redhat.com/ubi8/ubi-minimal
+RUN CGO_ENABLED=0 go build -a -mod=vendor -installsuffix cgo -ldflags="-w -s -X main.version=$VERSION" -o kubemq-run .
+FROM registry.access.redhat.com/ubi8/ubi-minimal:latest
 MAINTAINER KubeMQ info@kubemq.io
 ENV GOPATH=/go
 ENV PATH=$GOPATH/bin:$PATH

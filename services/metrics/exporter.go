@@ -40,6 +40,7 @@ func GetExporter() *Exporter {
 }
 
 type Exporter struct {
+	countersController  *CountersController
 	messagesCollector   *promCounterMetric
 	pendingCollector    *promGaugeMetric
 	volumeCollector     *promCounterMetric
@@ -98,7 +99,17 @@ func (e *Exporter) ChannelSummery(cs ...[]*ChannelStats) ([]*ChannelsSummery, er
 
 	return toChannelsSummery(stats), nil
 }
-
+func (e *Exporter) CountersSummery() (*Counters, error) {
+	str, err := e.PrometheusString()
+	if err != nil {
+		return nil, err
+	}
+	results, err := parse(str)
+	if err != nil {
+		return nil, err
+	}
+	return e.countersController.getCounters(results), nil
+}
 func (e *Exporter) Clients() ([]*ClientsStats, int, error) {
 	st, err := e.Stats()
 	if err != nil {
@@ -133,9 +144,10 @@ func (e *Exporter) Snapshot() (*api.Snapshot, error) {
 
 func initExporter(ctx context.Context) *Exporter {
 	e := &Exporter{
-		reportMetricCh: make(chan *reportMetric, reportMetricSize),
-		metricsDropped: atomic.NewUint64(0),
-		lastUpdate:     atomic.NewInt64(0),
+		reportMetricCh:     make(chan *reportMetric, reportMetricSize),
+		metricsDropped:     atomic.NewUint64(0),
+		lastUpdate:         atomic.NewInt64(0),
+		countersController: newCountersController(),
 	}
 	if !e.initPromMetrics() {
 		return nil

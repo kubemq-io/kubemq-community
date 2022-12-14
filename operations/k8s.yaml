@@ -18,7 +18,7 @@ spec:
       terminationGracePeriodSeconds: 10
       containers:
         - name: kubemq
-          image: kubemq/kubemq-community:latest
+          image: kubemq/kubemq-community:v2.3.7
           imagePullPolicy: Always
           volumeMounts:
             - name: config-volume

@@ -14,6 +14,8 @@ tasks:
     cmds:
       - golangci-lint run --disable gocritic --enable misspell --disable gosec
   default:
+    env:
+      DEV: true
     cmds:
       - go build -o "{{.BINARY_NAME}}.exe" -ldflags "-X 'main.version={{.VERSION}}'"
       - kubemq.exe server
@@ -23,6 +25,7 @@ tasks:
     cmds:
       - goreleaser --snapshot --skip-publish --rm-dist
   rundocker:
+
     cmds:
       - docker run -it --rm -p 8080:8080 -p 50000:50000 -p 9090:9090 kubemq/{{.BINARY_NAME}}-community:{{.VERSION}}
   docker:
@@ -41,3 +44,9 @@ tasks:
       - task: docker
       - task: docker_push
       - task: goreleaser
+  docker_buildx:
+    cmds:
+      - docker buildx build --platform linux/amd64,linux/arm64 --build-arg VERSION={{.VERSION}} . -t kubemq/{{.BINARY_NAME}}-community:{{.VERSION}} --push
+#      - docker buildx build --platform linux/amd64,linux/arm64 --build-arg VERSION={{.VERSION}} . -t kubemq/{{.BINARY_NAME}}:latest --push
+      - docker pull kubemq/{{.BINARY_NAME}}-community:{{.VERSION}}
+ #     - docker pull kubemq/{{.BINARY_NAME}}:latest

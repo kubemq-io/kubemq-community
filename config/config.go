@@ -29,6 +29,8 @@ type ServerState struct {
 	ServerUpTimeSeconds int64  `json:"server_up_time_seconds"`
 }
 
+var Version string
+
 func GetServerState() *ServerState {
 	if appConfig == nil {
 		return &ServerState{}
@@ -68,6 +70,7 @@ type Config struct {
 
 func (c *Config) SetVersion(value string) *Config {
 	c.version = value
+	Version = value
 	return c
 }
 

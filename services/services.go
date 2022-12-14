@@ -6,6 +6,7 @@ import (
 	"github.com/kubemq-io/kubemq-community/pkg/entities"
 	"github.com/kubemq-io/kubemq-community/services/authentication"
 	"github.com/kubemq-io/kubemq-community/services/authorization"
+	"github.com/kubemq-io/kubemq-community/services/report"
 
 	"github.com/kubemq-io/kubemq-community/services/metrics"
 	"github.com/kubemq-io/kubemq-community/services/routing"
@@ -34,6 +35,7 @@ type SystemServices struct {
 	ctx                  context.Context
 	cancelFunc           context.CancelFunc
 	readyToAcceptTraffic *atomic.Bool
+	reportService        *report.Service
 }
 
 func Start(ctx context.Context, appConfig *config.Config) (*SystemServices, error) {
@@ -41,6 +43,7 @@ func Start(ctx context.Context, appConfig *config.Config) (*SystemServices, erro
 		AppConfig:            appConfig,
 		Stopped:              make(chan struct{}, 1),
 		readyToAcceptTraffic: atomic.NewBool(false),
+		reportService:        report.NewService(),
 	}
 	s.ctx, s.cancelFunc = context.WithCancel(ctx)
 	var err error
@@ -106,6 +109,9 @@ start:
 	}
 	if err := s.Api.InitApiService(ctx, s.Array); err != nil {
 		s.logger.Errorf("error on loading api service: %s", err.Error())
+	}
+	if err := s.reportService.Init(s.ctx); err != nil {
+		s.logger.Errorf("error on loading report service: %s", err.Error())
 	}
 	return s, nil
 }
