@@ -41,8 +41,8 @@ tasks:
       - docker push kubemq/{{.BINARY_NAME}}-community:latest
   release:
     cmds:
-      - task: docker
-      - task: docker_push
+      - task: tag
+      - task: docker_buildx
       - task: goreleaser
   docker_buildx:
     cmds:
