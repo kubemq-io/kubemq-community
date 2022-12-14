@@ -25,7 +25,7 @@ type SnapshotDTO struct {
 	Queues            *FamilyDTO       `json:"queues"`
 	Pubsub            *FamilyDTO       `json:"pubsub"`
 	CommandsQueries   *FamilyDTO       `json:"commandsQueries"`
-	IsCluster         bool             `json:"isCluster"`
+	NodeType          string           `json:"nodeType"`
 	Node              string           `json:"node"`
 	inBaseValues      *BaseValues
 	outBaseValues     *BaseValues
@@ -47,7 +47,7 @@ func newSnapshot(systems []*System) *SnapshotDTO {
 		CommandsQueries: newFamilyDTO("commandsQueries"),
 		inBaseValues:    NewBaseValues(),
 		outBaseValues:   NewBaseValues(),
-		IsCluster:       false,
+		NodeType:        "community",
 		Node:            config.GetHostname(),
 	}
 }
