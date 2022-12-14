@@ -50,3 +50,7 @@ tasks:
       - docker buildx build --platform linux/amd64,linux/arm64 --build-arg VERSION={{.VERSION}} . -t kubemq/{{.BINARY_NAME}}-community:latest --push
       - docker pull kubemq/{{.BINARY_NAME}}-community:{{.VERSION}}
       - docker pull kubemq/{{.BINARY_NAME}}-community:latest
+  tag:
+    cmds:
+      - git tag -a {{.VERSION}} -m {{.VERSION}}
+      - git push origin main --tags
