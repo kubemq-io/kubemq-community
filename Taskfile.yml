@@ -21,7 +21,7 @@ tasks:
       - kubemq.exe server
   goreleaser:
     env:
-      TAG: v2.3.6
+      TAG: v2.3.7
     cmds:
       - goreleaser --snapshot --skip-publish --rm-dist
   rundocker:
@@ -47,6 +47,6 @@ tasks:
   docker_buildx:
     cmds:
       - docker buildx build --platform linux/amd64,linux/arm64 --build-arg VERSION={{.VERSION}} . -t kubemq/{{.BINARY_NAME}}-community:{{.VERSION}} --push
-#      - docker buildx build --platform linux/amd64,linux/arm64 --build-arg VERSION={{.VERSION}} . -t kubemq/{{.BINARY_NAME}}:latest --push
+      - docker buildx build --platform linux/amd64,linux/arm64 --build-arg VERSION={{.VERSION}} . -t kubemq/{{.BINARY_NAME}}-community:latest --push
       - docker pull kubemq/{{.BINARY_NAME}}-community:{{.VERSION}}
- #     - docker pull kubemq/{{.BINARY_NAME}}:latest
+      - docker pull kubemq/{{.BINARY_NAME}}-community:latest
