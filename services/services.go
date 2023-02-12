@@ -4,12 +4,8 @@ import (
 	"context"
 	"fmt"
 	"github.com/kubemq-io/kubemq-community/pkg/entities"
-	"github.com/kubemq-io/kubemq-community/services/authentication"
-	"github.com/kubemq-io/kubemq-community/services/authorization"
-	"github.com/kubemq-io/kubemq-community/services/report"
-
 	"github.com/kubemq-io/kubemq-community/services/metrics"
-	"github.com/kubemq-io/kubemq-community/services/routing"
+	"github.com/kubemq-io/kubemq-community/services/report"
 	"go.uber.org/atomic"
 	"time"
 
@@ -28,9 +24,6 @@ type SystemServices struct {
 	Broker               *broker.Service
 	Array                *array.Array
 	Api                  *api.Server
-	Authorization        *authorization.Service
-	Authentication       *authentication.Service
-	Routing              *routing.Service
 	logger               *logging.Logger
 	ctx                  context.Context
 	cancelFunc           context.CancelFunc
@@ -79,30 +72,6 @@ func Start(ctx context.Context, appConfig *config.Config) (*SystemServices, erro
 		}
 	}
 start:
-	if appConfig.Authentication.Enable {
-		s.Authentication, err = authentication.CreateAuthenticationService(s.ctx, appConfig)
-		if err != nil {
-			s.logger.Errorf("error on authentication service: %s", err.Error())
-		}
-		s.logger.Info("authentication service loaded")
-		authentication.SetSingleton(s.Authentication)
-	}
-	if appConfig.Authorization.Enable {
-		s.Authorization, err = authorization.CreateAuthorizationService(s.ctx, appConfig)
-		if err != nil {
-			s.logger.Errorf("error on authorization service: %s", err.Error())
-		}
-		s.logger.Info("authorization service loaded")
-		authorization.SetSingleton(s.Authorization)
-	}
-
-	s.Routing, err = routing.CreateRoutingService(s.ctx, appConfig)
-	if err != nil {
-		s.logger.Errorf("error on routing service: %s", err.Error())
-	}
-	s.logger.Info("routing service loaded")
-	routing.SetSingleton(s.Routing)
-
 	s.Array, err = array.Start(s.ctx, appConfig)
 	if err != nil {
 		return nil, errors.Wrapf(entities.ErrOnLoadingService, "service: %s, error: %s", "array service", err.Error())
@@ -111,7 +80,7 @@ start:
 		s.logger.Errorf("error on loading api service: %s", err.Error())
 	}
 	if err := s.reportService.Init(s.ctx); err != nil {
-		s.logger.Errorf("error on loading report service: %s", err.Error())
+		return nil, err
 	}
 	return s, nil
 }

@@ -17,12 +17,6 @@ Browse to [http://localhost:8080/](http://localhost:8080/) after installation an
 
 # Installation
 
-## Kubernetes
-
-``` bash  
-kubectl apply -f https://deploy.kubemq.io/community
-```  
-
 ## Docker
 
 Pull and run KubeMQ standalone docker container:

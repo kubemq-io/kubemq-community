@@ -80,10 +80,6 @@ func NewServer(svc *services.SystemServices, appConfigs ...*config.Config) (*Ser
 		s.UpdateBrokerStatus(s.acceptTraffic.Load())
 		svc.Broker.RegisterToNotifyState("rest", s.UpdateBrokerStatus)
 	}
-	if svc.Authentication != nil {
-		e.Use(Authenticate(svc.Authentication))
-	}
-
 	if appConfig.Rest.BodyLimit != "" {
 		e.Use(middleware.BodyLimit(appConfig.Rest.BodyLimit))
 	}

@@ -90,13 +90,11 @@ func configureServer(svc *services.SystemServices, logger *logging.Logger, opts 
 	connOptions = append(connOptions, grpc.StreamInterceptor(middleware.ChainStreamServer(
 		recovery.StreamServerInterceptor(recoveryOpts...),
 		middleware.StreamLoggerServerInterceptor(logger),
-		middleware.StreamAuthServerInterceptor(svc.Authentication),
 		middleware.StreamTrafficServerInterceptor(acceptTraffic),
 	)))
 	connOptions = append(connOptions, grpc.UnaryInterceptor(middleware.ChainUnaryServer(
 		recovery.UnaryServerInterceptor(recoveryOpts...),
 		middleware.UnaryLoggerServerInterceptor(logger),
-		middleware.UnaryAuthServerInterceptor(svc.Authentication),
 		middleware.UnaryTrafficServerInterceptor(acceptTraffic),
 	)))
 

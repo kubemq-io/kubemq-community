@@ -6,8 +6,6 @@ import (
 	"github.com/kubemq-io/kubemq-community/services/metrics"
 	"math/rand"
 
-	"github.com/kubemq-io/kubemq-community/services/authorization"
-	"github.com/kubemq-io/kubemq-community/services/routing"
 	"github.com/nats-io/nuid"
 	"sync"
 
@@ -46,8 +44,6 @@ type Array struct {
 	monitorMiddleware          *monitor.Middleware
 	isShutdown                 *atomic.Bool
 	clientsCount               *atomic.Int64
-	authorizationService       *authorization.Service
-	router                     *routing.Service
 	queueClientsPool           *client.QueuePool
 	queueDownstreamClientsPool *client.QueuePool
 	queueDownstreamCounter     *atomic.Uint64
@@ -65,10 +61,8 @@ func Start(ctx context.Context, appConfig *config.Config) (*Array, error) {
 
 		logger: logging.GetLogFactory().NewLogger("array"),
 
-		isShutdown:           atomic.NewBool(false),
-		clientsCount:         atomic.NewInt64(0),
-		authorizationService: authorization.GetSingleton(),
-		router:               routing.GetSingleton(),
+		isShutdown:   atomic.NewBool(false),
+		clientsCount: atomic.NewInt64(0),
 		queueClientsPool: client.NewQueuePool(ctx, &client.QueuePoolOptions{
 			KillAfter: 1 * time.Minute,
 			MaxUsage:  10,
@@ -380,166 +374,11 @@ func (a *Array) SendEvents(ctx context.Context, msg *pb.Event) (*pb.Result, erro
 	if a.isShutdown.Load() {
 		return nil, entities.ErrShutdownMode
 	}
-	if IsRoutable(msg.Channel) {
-		return a.processEventsRoutingMessages(ctx, msg)
-	} else {
-		return a.sendEvents(ctx, msg)
-	}
+	return a.sendEvents(ctx, msg)
+
 }
 
-func (a *Array) processEventsRoutingMessages(ctx context.Context, msg *pb.Event) (*pb.Result, error) {
-	routingMessages, err := a.router.CreateRouteMessages(msg.Channel, msg)
-	if err != nil {
-		return nil, err
-	}
-	firstMessage := routingMessages.Events[0]
-	result, err := a.sendEvents(ctx, firstMessage)
-	if err != nil {
-		return result, err
-	}
-	if len(routingMessages.Events) > 1 {
-		go func() {
-			for i := 1; i < len(routingMessages.Events); i++ {
-				event := routingMessages.Events[i]
-				_, err := a.sendEvents(ctx, event)
-				if err != nil {
-					a.logger.Errorf("error sending routed event to events channel %s: %s", event.Channel, err.Error())
-				}
-			}
-		}()
-
-	}
-
-	if len(routingMessages.EventsStore) > 0 {
-		go func() {
-			for i := 0; i < len(routingMessages.EventsStore); i++ {
-				eventStore := routingMessages.EventsStore[i]
-				_, err := a.sendEventsStore(ctx, eventStore)
-				if err != nil {
-					a.logger.Errorf("error sending routed event_store to events_store channel %s: %s", eventStore.Channel, err.Error())
-				}
-			}
-		}()
-	}
-
-	if len(routingMessages.QueueMessages) > 0 {
-		go func() {
-			for i := 0; i < len(routingMessages.QueueMessages); i++ {
-				queueMessage := routingMessages.QueueMessages[i]
-				_, err := a.sendQueueMessage(ctx, queueMessage)
-				if err != nil {
-					a.logger.Errorf("error sending routed queue message to queue channel %s: %s", queueMessage.Channel, err.Error())
-				}
-			}
-		}()
-	}
-
-	return result, nil
-}
-func (a *Array) processEventsStoreRoutingMessages(ctx context.Context, msg *pb.Event) (*pb.Result, error) {
-	routingMessages, err := a.router.CreateRouteMessages(msg.Channel, msg)
-	if err != nil {
-		return nil, err
-	}
-	firstMessage := routingMessages.EventsStore[0]
-	result, err := a.sendEventsStore(ctx, firstMessage)
-	if err != nil {
-		return result, err
-	}
-	if len(routingMessages.EventsStore) > 1 {
-		go func() {
-			for i := 1; i < len(routingMessages.EventsStore); i++ {
-				event := routingMessages.EventsStore[i]
-				_, err := a.sendEventsStore(ctx, event)
-				if err != nil {
-					a.logger.Errorf("error sending routed event_store to events_store channel %s: %s", event.Channel, err.Error())
-				}
-			}
-		}()
-
-	}
-
-	if len(routingMessages.Events) > 0 {
-		go func() {
-			for i := 0; i < len(routingMessages.Events); i++ {
-				event := routingMessages.Events[i]
-				_, err := a.sendEvents(ctx, event)
-				if err != nil {
-					a.logger.Errorf("error sending routed event to events channel %s: %s", event.Channel, err.Error())
-				}
-			}
-		}()
-	}
-
-	if len(routingMessages.QueueMessages) > 0 {
-		go func() {
-			for i := 0; i < len(routingMessages.QueueMessages); i++ {
-				queueMessage := routingMessages.QueueMessages[i]
-				_, err := a.sendQueueMessage(ctx, queueMessage)
-				if err != nil {
-					a.logger.Errorf("error sending routed queue message to queue channel %s: %s", queueMessage.Channel, err.Error())
-				}
-			}
-		}()
-	}
-
-	return result, nil
-}
-
-func (a *Array) processQueueMessageRoutingMessages(ctx context.Context, msg *pb.QueueMessage) (*pb.SendQueueMessageResult, error) {
-	routingMessages, err := a.router.CreateRouteMessages(msg.Channel, msg)
-	if err != nil {
-		return nil, err
-	}
-	firstMessage := routingMessages.QueueMessages[0]
-	result, err := a.sendQueueMessage(ctx, firstMessage)
-	if err != nil {
-		return result, err
-	}
-	if len(routingMessages.QueueMessages) > 1 {
-		go func() {
-			for i := 1; i < len(routingMessages.QueueMessages); i++ {
-				queueMessage := routingMessages.QueueMessages[i]
-				_, err := a.sendQueueMessage(ctx, queueMessage)
-				if err != nil {
-					a.logger.Errorf("error sending routed queue message to queue channel %s: %s", queueMessage.Channel, err.Error())
-				}
-			}
-		}()
-
-	}
-
-	if len(routingMessages.Events) > 0 {
-		go func() {
-			for i := 0; i < len(routingMessages.Events); i++ {
-				event := routingMessages.Events[i]
-				_, err := a.sendEvents(ctx, event)
-				if err != nil {
-					a.logger.Errorf("error sending routed queue message to events channel %s: %s", event.Channel, err.Error())
-				}
-			}
-		}()
-	}
-
-	if len(routingMessages.EventsStore) > 0 {
-		go func() {
-			for i := 0; i < len(routingMessages.EventsStore); i++ {
-				eventStore := routingMessages.EventsStore[i]
-				_, err := a.sendEventsStore(ctx, eventStore)
-				if err != nil {
-					a.logger.Errorf("error sending routed queue message to events_store channel %s: %s", eventStore.Channel, err.Error())
-				}
-			}
-		}()
-	}
-
-	return result, nil
-}
 func (a *Array) sendEvents(ctx context.Context, msg *pb.Event) (*pb.Result, error) {
-
-	if err := a.Authorize(msg); err != nil {
-		return nil, err
-	}
 	result, err := a.eventSender.SendEvents(ctx, msg)
 	metrics.ReportEvent(msg, result)
 	return result, err
@@ -549,17 +388,9 @@ func (a *Array) SendEventsStore(ctx context.Context, msg *pb.Event) (*pb.Result,
 	if a.isShutdown.Load() {
 		return nil, entities.ErrShutdownMode
 	}
-	if IsRoutable(msg.Channel) {
-		return a.processEventsStoreRoutingMessages(ctx, msg)
-	} else {
-		return a.sendEventsStore(ctx, msg)
-	}
-
+	return a.sendEventsStore(ctx, msg)
 }
 func (a *Array) sendEventsStore(ctx context.Context, msg *pb.Event) (*pb.Result, error) {
-	if err := a.Authorize(msg); err != nil {
-		return nil, err
-	}
 	result, err := a.eventsStoreSender.SendEventsStore(ctx, msg)
 	metrics.ReportEvent(msg, result)
 	return result, err
@@ -567,9 +398,6 @@ func (a *Array) sendEventsStore(ctx context.Context, msg *pb.Event) (*pb.Result,
 func (a *Array) SendQuery(ctx context.Context, req *pb.Request) (*pb.Response, error) {
 	if a.isShutdown.Load() {
 		return nil, entities.ErrShutdownMode
-	}
-	if err := a.Authorize(req); err != nil {
-		return nil, err
 	}
 	res, err := a.QuerySender.SendQuery(ctx, req)
 	return res, err
@@ -579,18 +407,12 @@ func (a *Array) SendCommand(ctx context.Context, req *pb.Request) (*pb.Response,
 	if a.isShutdown.Load() {
 		return nil, entities.ErrShutdownMode
 	}
-	if err := a.Authorize(req); err != nil {
-		return nil, err
-	}
 	res, err := a.CommandSender.SendCommand(ctx, req)
 	return res, err
 }
 func (a *Array) SendResponse(ctx context.Context, res *pb.Response) error {
 	if a.isShutdown.Load() {
 		return entities.ErrShutdownMode
-	}
-	if err := a.Authorize(res); err != nil {
-		return err
 	}
 	return a.ResponseSender.SendResponse(ctx, res)
 }
@@ -599,21 +421,13 @@ func (a *Array) SendQueueMessage(ctx context.Context, msg *pb.QueueMessage) (*pb
 	if a.isShutdown.Load() {
 		return nil, entities.ErrShutdownMode
 	}
-	if IsRoutable(msg.Channel) {
-		return a.processQueueMessageRoutingMessages(ctx, msg)
-	} else {
-		return a.sendQueueMessage(ctx, msg)
-	}
+	return a.sendQueueMessage(ctx, msg)
 }
 
 func (a *Array) sendQueueMessage(ctx context.Context, msg *pb.QueueMessage) (*pb.SendQueueMessageResult, error) {
 	if a.isShutdown.Load() {
 		return nil, entities.ErrShutdownMode
 	}
-	if err := a.Authorize(msg); err != nil {
-		return nil, err
-	}
-
 	nc, err := a.NewQueueClientFromPool(msg.Channel + "-sender")
 	if err != nil {
 		return nil, err
@@ -628,19 +442,7 @@ func (a *Array) SendQueueMessagesBatch(ctx context.Context, req *pb.QueueMessage
 	if a.isShutdown.Load() {
 		return nil, entities.ErrShutdownMode
 	}
-	foundRouting := false
-	for _, msg := range req.Messages {
-		if IsRoutable(msg.Channel) {
-			foundRouting = true
-			break
-		}
-	}
-
-	if foundRouting {
-		return a.sendQueueMessagesBatchWithRouting(ctx, req)
-	} else {
-		return a.sendQueueMessagesBatch(ctx, req)
-	}
+	return a.sendQueueMessagesBatch(ctx, req)
 }
 func (a *Array) sendQueueMessagesBatchWithRouting(ctx context.Context, req *pb.QueueMessagesBatchRequest) (*pb.QueueMessagesBatchResponse, error) {
 	if a.isShutdown.Load() {
@@ -667,11 +469,6 @@ func (a *Array) sendQueueMessagesBatch(ctx context.Context, req *pb.QueueMessage
 	if a.isShutdown.Load() {
 		return nil, entities.ErrShutdownMode
 	}
-	for _, msg := range req.Messages {
-		if err := a.Authorize(msg); err != nil {
-			return nil, err
-		}
-	}
 	nc, id, err := a.NewQueueUpstreamClientFromPool()
 	if err != nil {
 		return nil, err
@@ -687,9 +484,7 @@ func (a *Array) ReceiveQueueMessages(ctx context.Context, req *pb.ReceiveQueueMe
 	if a.isShutdown.Load() {
 		return nil, entities.ErrShutdownMode
 	}
-	if err := a.Authorize(req); err != nil {
-		return nil, err
-	}
+
 	nc, err := a.NewQueueClientFromPool(req.Channel + "-receiver")
 	if err != nil {
 		return nil, err
@@ -704,9 +499,7 @@ func (a *Array) AckAllQueueMessages(ctx context.Context, req *pb.AckAllQueueMess
 	if a.isShutdown.Load() {
 		return nil, entities.ErrShutdownMode
 	}
-	if err := a.Authorize(req); err != nil {
-		return nil, err
-	}
+
 	nc, err := a.NewQueueClientFromPool(req.Channel + "-receiver")
 	if err != nil {
 		return nil, err
@@ -716,9 +509,10 @@ func (a *Array) AckAllQueueMessages(ctx context.Context, req *pb.AckAllQueueMess
 	return res, err
 }
 func (a *Array) queueStreamMessageMiddleware(qc *client.QueueClient, msg *pb.StreamQueueMessagesRequest) error {
-	if err := a.Authorize(msg); err != nil {
-		return err
+	if a.isShutdown.Load() {
+		return entities.ErrShutdownMode
 	}
+
 	return nil
 }
 
@@ -740,9 +534,7 @@ func (a *Array) SubscribeEventsStore(ctx context.Context, subReq *pb.Subscribe, 
 	if a.isShutdown.Load() {
 		return "", entities.ErrShutdownMode
 	}
-	if err := a.Authorize(subReq); err != nil {
-		return "", err
-	}
+
 	nc, err := a.NewStoreClient(ctx, subReq.ClientID)
 	if err != nil {
 		return "", err
@@ -761,9 +553,6 @@ func (a *Array) SubscribeEventsStore(ctx context.Context, subReq *pb.Subscribe, 
 func (a *Array) SubscribeEvents(ctx context.Context, subReq *pb.Subscribe, msgCh chan *pb.EventReceive, errCh chan error) (string, error) {
 	if a.isShutdown.Load() {
 		return "", entities.ErrShutdownMode
-	}
-	if err := a.Authorize(subReq); err != nil {
-		return "", err
 	}
 	id := nuid.Next()
 	nc, err := a.NewClient(ctx, id, subReq.ClientID)
@@ -785,9 +574,7 @@ func (a *Array) SubscribeToQueries(ctx context.Context, subReq *pb.Subscribe, re
 	if a.isShutdown.Load() {
 		return "", entities.ErrShutdownMode
 	}
-	if err := a.Authorize(subReq); err != nil {
-		return "", err
-	}
+
 	randID := nuid.Next()
 	nc, err := a.NewClient(ctx, randID, subReq.ClientID)
 	if err != nil {
@@ -806,9 +593,7 @@ func (a *Array) SubscribeToCommands(ctx context.Context, subReq *pb.Subscribe, r
 	if a.isShutdown.Load() {
 		return "", entities.ErrShutdownMode
 	}
-	if err := a.Authorize(subReq); err != nil {
-		return "", err
-	}
+
 	randID := nuid.Next()
 	nc, err := a.NewClient(ctx, randID, subReq.ClientID)
 	if err != nil {

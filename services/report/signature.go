@@ -20,14 +20,7 @@ func CreateSignature() (*Signature, error) {
 	env := runAt()
 	switch env {
 	case "kubernetes":
-		host, ns, sig, err := kubernetesSignature()
-		if err != nil {
-			return nil, fmt.Errorf("error getting kubernetes signature, %s", err.Error())
-		}
-		s.Host = host
-		s.Fingerprint = hashString(fmt.Sprintf("%s-%s-%s", host, ns, sig))
-		s.Env = fmt.Sprintf("kubernetes-%s", ns)
-		return s, err
+		return nil, fmt.Errorf("running kubemq community version on kubernetes is not supported anymore, please use kubemq commercial version")
 	case "docker":
 		host, mac, err := dockerSignature()
 		if err != nil {

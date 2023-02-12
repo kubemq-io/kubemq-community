@@ -354,14 +354,7 @@ func (a *Array) queuesDownstream(ctx context.Context, requests chan *pb.QueuesDo
 		SetReleaseClientHandler(a.ReleaseQueueDownstreamClientFromPool).
 		SetRequestsCh(requests).
 		SetResponsesCh(response).
-		SetAuthMiddlewareFunc(a.queuesDownstreamRequestsMiddleware).
 		SetDone(done)
 	go handler.start()
 	return handler, nil
-}
-func (a *Array) queuesDownstreamRequestsMiddleware(qc *client.QueueClient, req *pb.QueuesDownstreamRequest) error {
-	if err := a.Authorize(req); err != nil {
-		return err
-	}
-	return nil
 }
